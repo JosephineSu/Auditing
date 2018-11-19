@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1059</width>
+    <width>1493</width>
     <height>601</height>
    </rect>
   </property>
@@ -18,6 +18,10 @@
   </property>
   <property name="windowTitle">
    <string>调查数据处理系统</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>icon/app.ico</normaloff>icon/app.ico</iconset>
   </property>
   <property name="styleSheet">
    <string notr="true">background-color:rgb(230, 230, 230);
@@ -74,7 +78,7 @@ color: rgb(35, 35, 35);</string>
            <number>0</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
            <number>0</number>
@@ -91,7 +95,7 @@ color: rgb(35, 35, 35);</string>
              <enum>QTabWidget::North</enum>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="tab_check">
              <attribute name="title">
@@ -116,8 +120,7 @@ color: rgb(35, 35, 35);</string>
                  <item>
                   <widget class="QPushButton" name="importTable">
                    <property name="styleSheet">
-                    <string notr="true">
-</string>
+                    <string notr="true"/>
                    </property>
                    <property name="text">
                     <string>导入相关表</string>
@@ -146,6 +149,13 @@ color: rgb(35, 35, 35);</string>
                   </widget>
                  </item>
                  <item>
+                  <widget class="QPushButton" name="pushButton">
+                   <property name="text">
+                    <string>自定义审核条件</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
                   <widget class="QPushButton" name="ducplictCheck">
                    <property name="text">
                     <string>检验复核</string>
@@ -165,33 +175,6 @@ color: rgb(35, 35, 35);</string>
                    </property>
                   </spacer>
                  </item>
-                 <item>
-                  <widget class="QLabel" name="label_3">
-                   <property name="text">
-                    <string>户SID：</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="searchlineEdit">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="inputMask">
-                    <string/>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="searchButton">
-                   <property name="text">
-                    <string>查找</string>
-                   </property>
-                  </widget>
-                 </item>
                 </layout>
                </widget>
               </item>
@@ -199,7 +182,7 @@ color: rgb(35, 35, 35);</string>
             </widget>
             <widget class="QWidget" name="tab_zy">
              <attribute name="title">
-              <string>账页</string>
+              <string>台账</string>
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_5">
               <item>
@@ -309,6 +292,9 @@ color: rgb(35, 35, 35);</string>
                  </item>
                  <item>
                   <widget class="QPushButton" name="export_taizhang">
+                   <property name="cursor">
+                    <cursorShape>UpArrowCursor</cursorShape>
+                   </property>
                    <property name="text">
                     <string>导出当前台账</string>
                    </property>
@@ -319,6 +305,51 @@ color: rgb(35, 35, 35);</string>
               </item>
              </layout>
             </widget>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="widget_5" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <property name="leftMargin">
+              <number>5</number>
+             </property>
+             <property name="topMargin">
+              <number>20</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_3">
+               <property name="text">
+                <string>户SID：</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="searchlineEdit">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="inputMask">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="searchButton">
+               <property name="text">
+                <string>查找</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>
@@ -340,7 +371,6 @@ color: rgb(35, 35, 35);</string>
            <number>0</number>
           </property>
          </layout>
-         <zorder>splitter_2</zorder>
         </widget>
        </item>
        <item>
@@ -392,7 +422,11 @@ color: rgb(35, 35, 35);</string>
                 <number>0</number>
                </property>
                <item>
-                <widget class="QTableWidget" name="tableData"/>
+                <widget class="QTableWidget" name="tableData">
+                 <attribute name="horizontalHeaderStretchLastSection">
+                  <bool>true</bool>
+                 </attribute>
+                </widget>
                </item>
               </layout>
              </widget>
@@ -430,8 +464,8 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1059</width>
-     <height>23</height>
+     <width>1493</width>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -439,32 +473,14 @@ p, li { white-space: pre-wrap; }
      <string>文件</string>
     </property>
     <addaction name="actionworkspace"/>
-    <addaction name="actionimportFile"/>
-    <addaction name="actionexportFiles"/>
-   </widget>
-   <widget class="QMenu" name="menu_2">
-    <property name="title">
-     <string>审核</string>
-    </property>
-    <addaction name="checkQuest"/>
-    <addaction name="checkZy"/>
-    <addaction name="checkIndepent"/>
-    <addaction name="actioncustomcheck"/>
-   </widget>
-   <widget class="QMenu" name="menu_3">
-    <property name="title">
-     <string>台账</string>
-    </property>
    </widget>
    <widget class="QMenu" name="menu_4">
     <property name="title">
      <string>帮助</string>
     </property>
-    <addaction name="actionintruduce"/>
+    <addaction name="actionIntroduce"/>
    </widget>
    <addaction name="menu"/>
-   <addaction name="menu_2"/>
-   <addaction name="menu_3"/>
    <addaction name="menu_4"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -545,7 +561,7 @@ p, li { white-space: pre-wrap; }
     <string>自定义审核条件</string>
    </property>
   </action>
-  <action name="actionintruduce">
+  <action name="actionIntroduce">
    <property name="text">
     <string>使用说明</string>
    </property>

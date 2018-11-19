@@ -1,7 +1,7 @@
 import sys
-# import AuditingMainWindow
 from mainWin import MyMainWindow
 from PyQt5.QtWidgets import QApplication, QMainWindow
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
