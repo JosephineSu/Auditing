@@ -24,7 +24,7 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
-          <widget class="QRadioButton" name="radioButton">
+          <widget class="QRadioButton" name="allTownRadioButton">
            <property name="text">
             <string>全部</string>
            </property>
@@ -36,7 +36,7 @@
          <item>
           <layout class="QVBoxLayout" name="verticalLayout">
            <item>
-            <widget class="QRadioButton" name="radioButton_2">
+            <widget class="QRadioButton" name="partTownRadioButton">
              <property name="text">
               <string>指定样本</string>
              </property>
@@ -48,7 +48,7 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_5">
              <item>
-              <widget class="QSpinBox" name="spinBox"/>
+              <widget class="QSpinBox" name="townLowSpinBox"/>
              </item>
              <item>
               <widget class="QLabel" name="label">
@@ -64,7 +64,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QSpinBox" name="spinBox_2">
+              <widget class="QSpinBox" name="townUpperSpinBox">
                <property name="value">
                 <number>13</number>
                </property>
@@ -84,7 +84,7 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_5">
          <item>
-          <widget class="QRadioButton" name="radioButton_3">
+          <widget class="QRadioButton" name="allMonthRadioButton">
            <property name="text">
             <string>归并账页</string>
            </property>
@@ -93,7 +93,7 @@
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_3">
            <item>
-            <widget class="QRadioButton" name="radioButton_4">
+            <widget class="QRadioButton" name="partMonthRadioButton">
              <property name="text">
               <string>分月账页</string>
              </property>
@@ -105,7 +105,7 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_4">
              <item>
-              <widget class="QSpinBox" name="spinBox_3"/>
+              <widget class="QSpinBox" name="monthLowSpinBox"/>
              </item>
              <item>
               <widget class="QLabel" name="label_2">
@@ -121,7 +121,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QSpinBox" name="spinBox_4"/>
+              <widget class="QSpinBox" name="monthUpperSpinBox"/>
              </item>
             </layout>
            </item>
@@ -140,7 +140,7 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QRadioButton" name="radioButton_6">
+       <widget class="QRadioButton" name="zy_necessity">
         <property name="text">
          <string>必要性审核</string>
         </property>
@@ -150,14 +150,14 @@
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="radioButton_7">
+       <widget class="QRadioButton" name="zy_suggestion">
         <property name="text">
          <string>提示性审核</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QRadioButton" name="radioButton_5">
+       <widget class="QRadioButton" name="zy_addition">
         <property name="text">
          <string>附加审核</string>
         </property>
@@ -177,7 +177,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="lineEdit">
+       <widget class="QLineEdit" name="dirlineEdit">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -187,7 +187,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="selectPathButton">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -206,20 +206,6 @@
     <widget class="QWidget" name="widget_3" native="true">
      <layout class="QHBoxLayout" name="horizontalLayout_7">
       <item>
-       <widget class="QPushButton" name="pushButton_2">
-        <property name="text">
-         <string>开始审核</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="pushButton_3">
-        <property name="text">
-         <string>查看结果</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QDialogButtonBox" name="buttonBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -232,6 +218,9 @@
         </property>
         <property name="standardButtons">
          <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+        </property>
+        <property name="centerButtons">
+         <bool>false</bool>
         </property>
        </widget>
       </item>
