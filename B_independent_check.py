@@ -48,9 +48,12 @@ def B_independent_check(tableB,xiaoqu,result):
         family_sid = B['SID']
         scode = B['SCODE']
         qu_vid = family_sid[0:15]
-        qu = xiaoqu[xiaoqu['vID'] == qu_vid]
-        townname = qu['townName'].values[0]
-        vname = qu['vName'].values[0]
+        # qu = xiaoqu[xiaoqu['vID'] == qu_vid]
+        # townname = qu['townName'].values[0]
+        # vname = qu['vName'].values[0]
+        qu = xiaoqu[xiaoqu['VID'] == qu_vid]
+        townname = qu['TOWNNAME'].values[0]
+        vname = qu['VNAME'].values[0]
 
         dict = {'year': year, 'sid': family_sid, 'scode': scode, 'townname': townname,'vname': vname}
 

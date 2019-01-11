@@ -157,6 +157,8 @@ def zy_check_necessity(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
     zhuhu = zhuhu.drop(0)
     zy = zy.sort_values(by="SID")
     zy_familys = spliteFamily(zy)
+    xiaoqu["VID"] = xiaoqu["VID"].apply(str)
+    xiaoqu["VID"] = xiaoqu["VID"].apply(lambda x: x.strip())
 
     # conditions = open("./condition.json")
     with open("./condition.json", 'r', encoding='utf-8-sig') as f:
@@ -177,13 +179,13 @@ def zy_check_necessity(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
         one_zhuhu = zhuhu[zhuhu["HHID"] == family_sid]
         one_zhuzhai = zhuzhai[zhuzhai["HID"] == HID]
         B = TableB[TableB["SID"] == family_sid]
-        qu_vid = family_sid[0:15]
-        # qu = xiaoqu[xiaoqu['VID'] == qu_vid]
-        # townname = qu['TOWNNAME'].values[0]
-        # vname = qu['VNAME'].values[0]
-        qu = xiaoqu[xiaoqu['vID'] == qu_vid]
-        townname = qu['townName'].values[0]
-        vname = qu['vName'].values[0]
+        qu_vid = str(family_sid[0:15])
+        qu = xiaoqu[xiaoqu['VID'] == qu_vid]
+        townname = qu['TOWNNAME'].values[0]
+        vname = qu['VNAME'].values[0]
+        # qu = xiaoqu[xiaoqu['vID'] == qu_vid]
+        # townname = qu['townName'].values[0]
+        # vname = qu['vName'].values[0]
         ChangeH = 0
         lenM = 0
         surveyType = Table(one_zhuhu, "SURVEYTYPE")
@@ -212,9 +214,16 @@ def zy_check_necessity(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
             if openYear == Year and openMonth <= Month and openMonth > Month -2:
                 ChangeH = 1
         else:
-            lenM = Month + 1
+            # lenM = Month + 1
+            lenM = 0
+            year_set = list(set(zy_family["YEAR"]))
+            print(year_set)
+            for year in year_set:
+                month_set = zy_family[zy_family["YEAR"] == year]["MONTH"]
+                lenM += len(list(set(month_set)))
             if openYear == Year and openMonth <= Month:
                 ChangeH = 1
+        print("month:",lenM)
         # print(one_zhuzhai)
         # a = one_zhuzhai["M105"].values[0]
         # print("a:",a)
@@ -607,18 +616,30 @@ def zy_check_necessity(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
 # 打开csv文件 返回DataFrame对象
 def read_csv(path):
     with open(path, 'r') as f:
-        file = pd.read_csv(f, header=0,low_memory=False)
-    return file
+        df = pd.read_csv(f, header=0,low_memory=False)
+        col = colUpper(df.columns.values.tolist())
+        df = df.rename(columns=col)
+    return df
 
+# 将所有列名换成大写
+def colUpper(col):
+    dict = {}
+    for key in col:
+        value = key.upper()
+        # print(value)
+        dict[key] = value
+    return dict
 
 if __name__ == '__main__':
-    A_path = u"D:\研一\项目\githubProjects\code\AuditingAPP\输入文件夹\A310151.18.csv"
-    B_path = u"D:\研一\项目\githubProjects\code\AuditingAPP\输入文件夹\B310151.18.csv"
-    zy_path = u"D:\研一\项目\githubProjects\code\AuditingAPP\输入文件夹\账页310151.20181.20181004.csv"
+    A_path = r"D:\研一\项目\测试数据\外部程序测试数据\外部程序测试数据\18年A卷数据.csv"
+    B_path = r"D:\研一\项目\测试数据\外部程序测试数据\外部程序测试数据\18年B卷数据.csv"
+    zy_path = r"D:\研一\项目\测试数据\外部程序测试数据\外部程序测试数据\18年账页数据.csv"
+    xiaoqu_path = r"D:\研一\项目\测试数据\外部程序测试数据\外部程序测试数据\S310151.18_1.csv"
+
     # zy_path = u"D:/Document/Code/Python/AuditingApp/src/输入文件夹/D310151.1806.csv"
     zhuhu_path = u"D:\研一\项目\githubProjects\code\AuditingAPP\输入文件夹\住户样本310151.18.csv"
     zhuzhai_path = u"D:\研一\项目\githubProjects\code\AuditingAPP\输入文件夹\住宅名录310151.18.csv"
-    xiaoqu_path = u"D:\研一\项目\githubProjects\code\AuditingAPP\输入文件夹\小区名录310151.18.csv"
+    # xiaoqu_path = u"D:\研一\项目\githubProjects\code\AuditingAPP\输入文件夹\小区名录310151.18.csv"
     xiaoqu = read_csv(xiaoqu_path)
     TableA = read_csv(A_path)
     TableB = read_csv(B_path)

@@ -62,12 +62,12 @@ def B_necessity_check(tableB,zhuhu,zhuzhai,xiaoqu,result_table):
         # print(Year,single_row['YEAR'])
         scode = single_row['SCODE']
         qu_vid = family_sid[0:15]
-        # qu = xiaoqu[xiaoqu['VID'] == qu_vid]
-        # townname = qu['TOWNNAME'].values[0]
-        # vname = qu['VNAME'].values[0]
-        qu = xiaoqu[xiaoqu['vID'] == qu_vid]
-        townname = qu['townName'].values[0]
-        vname = qu['vName'].values[0]
+        qu = xiaoqu[xiaoqu['VID'] == qu_vid]
+        townname = qu['TOWNNAME'].values[0]
+        vname = qu['VNAME'].values[0]
+        # qu = xiaoqu[xiaoqu['vID'] == qu_vid]
+        # townname = qu['townName'].values[0]
+        # vname = qu['vName'].values[0]
         dict = {'year':str(single_row['YEAR']),'sid':family_sid,'scode':scode,'townname':townname,'vname':vname}
 
         # result.write(single_row['SID']+":")

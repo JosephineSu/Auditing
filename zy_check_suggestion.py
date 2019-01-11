@@ -103,12 +103,12 @@ def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
         B = TableB[TableB['SID'] == family_sid]
         qu_vid = family_sid[0:15]
         # print(qu_vid)
-        # qu = xiaoqu[xiaoqu['VID'] == qu_vid]
-        # townname = qu['TOWNNAME'].values[0]
-        # vname = qu['VNAME'].values[0]
-        qu = xiaoqu[xiaoqu['vID'] == qu_vid]
-        townname = qu['townName'].values[0]
-        vname = qu['vName'].values[0]
+        qu = xiaoqu[xiaoqu['VID'] == qu_vid]
+        townname = qu['TOWNNAME'].values[0]
+        vname = qu['VNAME'].values[0]
+        # qu = xiaoqu[xiaoqu['vID'] == qu_vid]
+        # townname = qu['townName'].values[0]
+        # vname = qu['vName'].values[0]
         ChangeH = 0
         # surveyType = int(one_zhuhu['SURVEYTYPE'].values[0])
         surveyType = Table(one_zhuhu,"SURVEYTYPE")

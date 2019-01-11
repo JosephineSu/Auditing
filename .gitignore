@@ -5,3 +5,4 @@
 输入文件夹
 *.xlsx
 ./*.xlsx
+__pycache__/
