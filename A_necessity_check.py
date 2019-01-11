@@ -14,9 +14,12 @@ import myLogging as mylogger
 Year = datetime.datetime.now().year
 Month = datetime.datetime.now().month
 
-A_necessity_data = {'sid':[],'scode':[],'name':[],'code':[],'提示内容':[],'townname':[],'vname':[]}
-A_necessity_result = pd.DataFrame(A_necessity_data)
-A_necessity_result = A_necessity_result[['sid','scode','name','code','提示内容','townname','vname']]
+# A_necessity_data = {'sid':[],'scode':[],'name':[],'code':[],'提示内容':[],'townname':[],'vname':[]}
+# A_necessity_result = pd.DataFrame(A_necessity_data)
+# A_necessity_result = A_necessity_result[['sid','scode','name','code','提示内容','townname','vname']]
+# A_necessity_result = ''
+A_necessity_result = pd.DataFrame()
+
 
 def insert_to_pd(data):
     global A_necessity_result
@@ -53,8 +56,12 @@ def Table(table,code):
         return 0
 
 
-def A_necessity_check(TableA,zhuhu,xiaoqu):
+def A_necessity_check(TableA,zhuhu,xiaoqu,result_table):
     mylogger.logger.debug("A_necessity_check init..")
+    global A_necessity_result
+    A_necessity_result.drop(A_necessity_result.index, inplace=True)
+    A_necessity_result = result_table
+
     # result = open(r'..\Auditing\审核结果输出\A_necessity_check_result.txt', 'w')
     hu_total = spliteFamily(TableA)
     for hu in hu_total:
@@ -63,13 +70,13 @@ def A_necessity_check(TableA,zhuhu,xiaoqu):
         hzAge,xb,hz,po=0,0,0,0
         # print(hu)
         family_sid = TableA['SID'].values[0]
+        # print(type(zhuhu["HHID"].values[0]),type(family_sid))
         one_zhuhu = zhuhu[zhuhu["HHID"] == family_sid]
         scode = TableA['SCODE'].values[0]
-
         qu_vid = family_sid[0:15]
-        qu = xiaoqu[xiaoqu['vID'] == qu_vid]
-        townname = qu['townName'].values[0]
-        vname = qu['vName'].values[0]
+        qu = xiaoqu[xiaoqu['VID'] == qu_vid]
+        townname = qu['TOWNNAME'].values[0]
+        vname = qu['VNAME'].values[0]
 
         dict = {'sid':family_sid,'scode':scode,'townname':townname,'vname':vname}
 
@@ -494,6 +501,8 @@ def A_necessity_check(TableA,zhuhu,xiaoqu):
             if hzAge < 1:
                 dict['提示内容'] = "没有户主？"
 
+    return A_necessity_result
+
     # result.write("ok")
 
 # result.write(str)
@@ -508,6 +517,10 @@ if __name__ == "__main__":
     xiaoqu = read_file(xiaoqu_path)
     zhuhu = read_file(zhuhu_path)
 
-    A_necessity_check(TableA,zhuhu,xiaoqu)
+    A_necessity_data = {'sid':[],'scode':[],'name':[],'code':[],'提示内容':[],'townname':[],'vname':[]}
+    A_necessity_resut = pd.DataFrame(A_necessity_data)
+    A_necessity_resut = A_necessity_resut[['sid','scode','name','code','提示内容','townname','vname']]
+
+    A_necessity_check(TableA,zhuhu,xiaoqu,A_necessity_resut)
     # global A_necessity_result
     A_necessity_result.to_csv('A_necessity_result.csv',encoding='utf_8_sig')

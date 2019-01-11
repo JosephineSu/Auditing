@@ -163,6 +163,13 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QRadioButton" name="zy_independent">
+        <property name="text">
+         <string>独立审核</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

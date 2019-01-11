@@ -39,6 +39,7 @@ class QuestionCheckDialog(QDialog,Ui_questionCheck):
         As = self.A_suggestion.isChecked()
         Bn = self.B_necessity.isChecked()
         Bs = self.B_suggestion.isChecked()
+        Bi = self.B_independent.isChecked()
 
         if self.partRadioButton.isChecked() == True:
 
@@ -46,8 +47,8 @@ class QuestionCheckDialog(QDialog,Ui_questionCheck):
             upper = self.upperSpinBox.value()
             print(lower,upper)
             range = lower * 100 + upper
-            return An,As,Bn,Bs,range
-        return An, As, Bn, Bs, 0
+            return An,As,Bn,Bs,Bi,range
+        return An, As, Bn, Bs,Bi, 0
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

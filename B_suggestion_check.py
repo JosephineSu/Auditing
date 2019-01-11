@@ -3,16 +3,15 @@
 # *    问卷B审核公式（必要性）   *
 # *        2015年08月26日        *
 # ********************************
+from decimal import Decimal
+
 import pandas as pd
 import myLogging as mylogger
 import datetime
 
 # Year = datetime.datetime.now().year
 # Month = datetime.datetime.now().month
-B_suggestion_data = {'year':[],'sid':[],'scode':[],'code':[],'提示内容':[],'townname':[],'vname':[]}
-B_suggestion_result = pd.DataFrame(B_suggestion_data)
-B_suggestion_result = B_suggestion_result[['year','sid','scode','code','提示内容','townname','vname']]
-
+B_suggestion_result = pd.DataFrame()
 
 def insert_to_pd(data):
     global B_suggestion_result
@@ -33,14 +32,18 @@ def Table(table, code):
             return 0
         if type(t.values[0]) == type("str"):
             # print("字符串类型：",type(t.values[0]))
-            return int(t.values[0])
+            return int(t.values[ 0])
         return t.values[0]
     else:
         return 0
 
 
-def B_suggestion_check(tableB, zhuhu, zhuzhai,xiaoqu):
+def B_suggestion_check(tableB, zhuhu, zhuzhai,xiaoqu,result_table):
     mylogger.logger.debug("B_necessity_check init..")
+    global B_suggestion_result
+    B_suggestion_result.drop(B_suggestion_result.index, inplace=True)
+    B_suggestion_result = result_table
+
     B, M = 92, 993
     E = 95
     # if M_91 == M_94:  #//开户拒访：开户时间和拒访时间相同
@@ -58,13 +61,14 @@ def B_suggestion_check(tableB, zhuhu, zhuzhai,xiaoqu):
         one_zhuhu = zhuhu[zhuhu['HHID'] == family_sid]
         one_zhuzhai = zhuzhai[zhuzhai['HID'] == family_sid[:-2]]
         # Year = Table(single_row, "YEAR")
-        Year = int(single_row['YEAR'])
+        Year = int(float(single_row['YEAR']))
+        print(Year)
         scode = single_row['SCODE']
         qu_vid = family_sid[0:15]
-        qu = xiaoqu[xiaoqu['vID'] == qu_vid]
-        townname = qu['townName'].values[0]
-        vname = qu['vName'].values[0]
-        dict = {'year': Year, 'sid': family_sid, 'scode': scode, 'townname': townname, 'vname': vname}
+        qu = xiaoqu[xiaoqu['VID'] == qu_vid]
+        townname = qu['TOWNNAME'].values[0]
+        vname = qu['VNAME'].values[0]
+        dict = {'year': str(single_row['YEAR']), 'sid': family_sid, 'scode': scode, 'townname': townname, 'vname': vname}
 
         if single_row['B101'] == 1:
             # 逻辑审核
@@ -99,7 +103,7 @@ def B_suggestion_check(tableB, zhuhu, zhuzhai,xiaoqu):
                     insert_to_pd(dict)
 
                 if single_row['B118'] / 100 > single_row['B121']:
-                    dict['code'] = "B104={},B118={},B121{}=".format(single_row['B104'], single_row['B118'],single_row['B121'])
+                    dict['code'] = "B104={},B118={},B121={}".format(single_row['B104'], single_row['B118'],single_row['B121'])
                     dict['提示内容'] = "自有现住房现市场价是原购建价的100倍以上，请核实"
                     insert_to_pd(dict)
 
@@ -224,6 +228,8 @@ def B_suggestion_check(tableB, zhuhu, zhuzhai,xiaoqu):
             #         if single_row['B236'] + single_row['B237'] <= 0:
             #             result.write('有种植大豆或薯类，但无其他原粮或加工粮结存，请审核')
 
+    return B_suggestion_result
+
 
 if __name__ == "__main__":
     B_path = "D:\研一\审核程序\src\输入文件夹\B310151.18.csv"
@@ -236,6 +242,9 @@ if __name__ == "__main__":
     zhuzhai = read_csv(zhuzhai_path)
     zhuhu = read_csv(zhuhu_path)
     xiaoqu = read_csv(xiaoqu_path)
-    B_suggestion_check(tableB,zhuhu,zhuzhai,xiaoqu)
+    B_suggestion_data = {'year': [], 'sid': [], 'scode': [], 'code': [], '提示内容': [], 'townname': [], 'vname': []}
+    B_suggestion_result = pd.DataFrame(B_suggestion_data)
+    B_suggestion_result = B_suggestion_result[['year', 'sid', 'scode', 'code', '提示内容', 'townname', 'vname']]
+    B_suggestion_check(tableB,zhuhu,zhuzhai,xiaoqu,B_suggestion_result)
     B_suggestion_result.to_csv('B_suggestion_result.csv',encoding='utf_8_sig')
 

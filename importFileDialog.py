@@ -18,7 +18,7 @@ class importFileDialog(QDialog,Ui_importFileDialog):
         self.workPath = workPath
         self.win = win
 
-        self.res_path = {"A":"","B":"","住户":"","住宅":"","小区":""}
+        self.res_path = {"A":"","B":"","住户":"","住宅":"","小区":"","账页表":"","编码手册":""}
         self.setupUi(self)
         self.connectSlot()
         mylogger.logger.debug("importFileDialog init ok")
@@ -32,6 +32,7 @@ class importFileDialog(QDialog,Ui_importFileDialog):
         self.zhuzhai_pushButton.clicked.connect(lambda :self.openFile("住宅"))
         self.xiaoqu_pushButton.clicked.connect(lambda :self.openFile("小区"))
         self.zy_pushButton.clicked.connect(lambda :self.openFile("账页表"))
+        self.codes_pushButton.clicked.connect(lambda :self.openFile("编码手册"))
 
     def openFile(self,info=""):
         print("openFile")
@@ -56,6 +57,9 @@ class importFileDialog(QDialog,Ui_importFileDialog):
                 self.res_path[info] = filePath
             if info == "账页表":
                 self.zy_path.setText(filePath)
+                self.res_path[info] = filePath
+            if info == "编码手册":
+                self.codes_path.setText(filePath)
                 self.res_path[info] = filePath
 
     def getPath(self):

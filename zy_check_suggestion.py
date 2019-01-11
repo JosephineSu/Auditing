@@ -4,9 +4,7 @@ import datetime
 from decimal import Decimal
 import myLogging as mylogger
 
-data = {'year': [], 'task': [], 'month': [], 'scode': [], 'sid': [], 'person': [], 'name': [], 'code': [], '核实内容': [],'townname':[], 'vname':[]}#, 'haddr': []}
-result = pd.DataFrame(data)
-result = result[['year', 'month', 'task', 'scode', 'sid', 'person', 'name', 'code', '核实内容','townname', 'vname']]#, 'haddr']]
+zy_suggestion_result = pd.DataFrame()
 
 def spliteFamily(table):
     sid_array = table["SID"].drop_duplicates()
@@ -72,16 +70,23 @@ def amountSum(zy,code,person=0):
 
 
 def insert_to_pd(data):
-    global result
-    result = result.append(data, ignore_index=True)
+    global zy_suggestion_result
+    zy_suggestion_result = zy_suggestion_result.append(data, ignore_index=True)
 
-def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu):
-    begin = datetime.datetime.now()
-    # zy = zy.drop(0)
-    # zhuzhai = zhuzhai.drop(0)
-    # zhuhu = zhuhu.drop(0)
-    # zy.fillna(0)
+def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
     mylogger.logger.debug("zy_check_suggestion init..")
+    begin = datetime.datetime.now()
+    if zy['COUN'].values[0].strip() == "县码":
+        zy = zy.drop(0)
+    if zhuzhai['COUN'].values[0].strip() == "县区代码":
+        zhuzhai = zhuzhai.drop(0)
+    if zhuhu['COUN'].values[0].strip() == "县区代码":
+        zhuhu = zhuhu.drop(0)
+
+    global zy_suggestion_result
+    zy_suggestion_result.drop(zy_suggestion_result.index,inplace=True)
+    zy_suggestion_result = result
+
     zy = zy.sort_values(by='SID')
     zy_families = spliteFamily(zy)
     for zy_family in zy_families:
@@ -90,7 +95,7 @@ def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu):
         HID = family_sid[0:19]
         A = TableA[TableA['SID'] == family_sid]
         if A.empty == True:
-            print(family_sid+"A表中无此户")
+            # print(family_sid+"A表中无此户")
             continue
 
         one_zhuhu = zhuhu[zhuhu['HHID'] == family_sid]
@@ -98,11 +103,12 @@ def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu):
         B = TableB[TableB['SID'] == family_sid]
         qu_vid = family_sid[0:15]
         # print(qu_vid)
+        # qu = xiaoqu[xiaoqu['VID'] == qu_vid]
+        # townname = qu['TOWNNAME'].values[0]
+        # vname = qu['VNAME'].values[0]
         qu = xiaoqu[xiaoqu['vID'] == qu_vid]
-        # print(xiaoqu)
         townname = qu['townName'].values[0]
         vname = qu['vName'].values[0]
-        # print(townname)
         ChangeH = 0
         # surveyType = int(one_zhuhu['SURVEYTYPE'].values[0])
         surveyType = Table(one_zhuhu,"SURVEYTYPE")
@@ -114,7 +120,7 @@ def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu):
         # print(scode)
         openYear = Table(one_zhuhu, 'OPENYEAR')
 
-        dict = {'year': Year, 'month': Month, 'task': task, 'scode': scode, 'sid': family_sid,'person':99,\
+        dict = {'year': str(Year), 'month': str(Month), 'task': str(task), 'scode': scode, 'sid': family_sid,'person':str(99),\
                 'townname':townname,'vname':vname}
 
         if pd.isnull(openYear) == False:
@@ -137,7 +143,6 @@ def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu):
             sum1 = moneySum(zy_family,"560611")
             sum2 = moneySum(zy_family,"521111")
             if Table(B,'B126') != 1 and Table(B,'B139') == 0 and sum1+sum2 > 0:
-                # dict = {'year':Year,'month':Month,'task':task,'scode':scode,'sid':family_sid,'person':99}
                 value = "B126={},B139={},'560611'={},'521111'={}".format(Table(B,'B126'),Table(B,'B139'),sum1,sum2)
                 dict['code'] = value
                 dict['核实内容'] = "有住房还贷支出或利息支出 ,本宅B表无还贷情况且期内没有新购住房(B126,b139)，核实是否1年前贷款购买本宅外住房"
@@ -251,12 +256,11 @@ def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu):
                 name = A_member['A101']
                 if person > 0:
                     person_zy = zy_family[zy_family["PERSON"] == str(person)]
-
                     money = moneySum(person_zy,"2") - moneySum(person_zy,"240511")
                     if Table(A,"A106") < 16 and money > 0:
-                        dict['person'] = person
+                        dict['person'] = str(person)
                         dict['name']= name
-                        value = "A106={},money[2]-money[240511]={}".format(Table(A,"A106"),money)
+                        value = "A106={},'2'-'240511'={}".format(Table(A,"A106"),money)
                         dict['code'] = value
                         dict['核实内容'] = "年龄低于16岁，有工资、经营等收入，核实是否为童工？"
                         insert_to_pd(dict)
@@ -271,15 +275,17 @@ def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu):
                     # if 5 < Table(A, "A206") < 21 and Table(A,"A205") == 7 and sum1 - sum2 == 0:
                     money = moneySum(person_zy,"220511")
                     if 5 < Table(A, "A206") < 21 and Table(A, "A205") == 7 and money == 0:
-                        dict['person'] = person
+                        dict['person'] = str(person)
                         dict['name'] = name
-                        value = "A206={},A205={},code=220511,money={}".format(Table(A, "A206"),Table(A, "A205"),money)
+                        value = "A206={},A205={},'220511'={}".format(Table(A, "A206"),Table(A, "A205"),money)
                         dict['code'] = value
                         dict['核实内容'] = "从事第三产业经营（a206）的就业人员（a205）无第三产业收入"
                         insert_to_pd(dict)
                         # print("从事第三产业经营（a206）的就业人员（a205）无第三产业收入")
                     # if 5 < Table(A, "A206") < 21 and Table(A,"A205") == 7 and sum1 - sum2 == 0:
                     #     print("本期内从事第三产业经营（a206）的就业人员（a205）无第三产业收入")
+
+    return zy_suggestion_result
 
 # 打开csv文件 返回DataFrame对象
 def read_csv(path):
@@ -307,17 +313,11 @@ if __name__ == '__main__':
     zhuhu = read_csv(zhuhu_path)
     xiaoqu = read_csv(xiaoqu_path)
 
+    head = {'year': [], 'task': [], 'month': [], 'scode': [], 'sid': [], 'person': [], 'name': [], 'code': [],
+            '核实内容': [], 'townname': [], 'vname': []}  # , 'haddr': []}
+    result = pd.DataFrame(head)
+    result = result[['year', 'month', 'task', 'scode', 'sid', 'person', 'name', 'code', '核实内容', 'townname', 'vname']]  # , 'haddr']]
 
-    if zy['COUN'].values[0].strip() == "县码":
-        zy = zy.drop(0)
-
-    if zhuzhai['COUN'].values[0].strip() == "县区代码":
-        zhuzhai = zhuzhai.drop(0)
-
-    if zhuhu['COUN'].values[0].strip() == "县区代码":
-        zhuhu = zhuhu.drop(0)
-
-    zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu)
-    result.to_csv('zyCheckSuggestionResult.csv',encoding='utf_8_sig')
-
-
+    zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result)
+    zy_suggestion_result.to_excel('zy_suggestion_result.xlsx',encoding="utf-8",index=False,sheet_name='Sheet')
+    # result.to_csv('zyCheckSuggestionResult.csv',encoding='utf_8_sig')

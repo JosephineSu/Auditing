@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['main.py'],
-             pathex=['D:\\CodeSoftware\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin', 'D:\\Document\\Code\\Python\\AuditingApp\\github\\Auditing'],
+             pathex=['C:\\Users\\czl\\AppData\\Local\\Programs\\Python\\Python35-32\\Lib\\site-packages\\PyQt5\\Qt\\bin', 'C:\\Document\\AuditingAPP'],
              binaries=[],
              datas=[],
              hiddenimports=[],
@@ -29,4 +29,4 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False )
+          console=False , icon='app.ico')

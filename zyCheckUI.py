@@ -99,6 +99,9 @@ class Ui_zyCheckDialog(object):
         self.zy_addition = QtWidgets.QRadioButton(self.groupBox_3)
         self.zy_addition.setObjectName("zy_addition")
         self.horizontalLayout_2.addWidget(self.zy_addition)
+        self.zy_independent = QtWidgets.QRadioButton(self.groupBox_3)
+        self.zy_independent.setObjectName("zy_independent")
+        self.horizontalLayout_2.addWidget(self.zy_independent)
         self.verticalLayout_2.addWidget(self.groupBox_3)
         self.widget_2 = QtWidgets.QWidget(zyCheckDialog)
         self.widget_2.setObjectName("widget_2")
@@ -138,8 +141,6 @@ class Ui_zyCheckDialog(object):
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setCenterButtons(False)
         self.buttonBox.setObjectName("buttonBox")
-        self.buttonBox.button(self.buttonBox.Ok).setText("开始审核")
-        self.buttonBox.button(self.buttonBox.Cancel).setText("取消")
         self.horizontalLayout_7.addWidget(self.buttonBox)
         self.verticalLayout_2.addWidget(self.widget_3)
 
@@ -163,6 +164,7 @@ class Ui_zyCheckDialog(object):
         self.zy_necessity.setText(_translate("zyCheckDialog", "必要性审核"))
         self.zy_suggestion.setText(_translate("zyCheckDialog", "提示性审核"))
         self.zy_addition.setText(_translate("zyCheckDialog", "附加审核"))
+        self.zy_independent.setText(_translate("zyCheckDialog", "独立审核"))
         self.label_3.setText(_translate("zyCheckDialog", "输出路径："))
         self.selectPathButton.setText(_translate("zyCheckDialog", "浏览"))
 

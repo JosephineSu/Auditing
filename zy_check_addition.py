@@ -42,7 +42,7 @@ def judge_moneySum(x):
     else:
         return 0
 
-def Zy_check_addition(TableA,TableB,zy,zhuzhai,zhuhu):
+def zy_check_addition(TableA,TableB,zy,zhuzhai,zhuhu):
     begin = datetime.datetime.now()
     zy = zy.drop(0)
     zhuzhai = zhuzhai.drop(0)
@@ -146,4 +146,4 @@ if __name__ == '__main__':
     zhuzhai = read_csv(zhuzhai_path)
     zhuhu = read_csv(zhuhu_path)
 
-    Zy_check_addition(TableA,TableB,zy,zhuzhai,zhuhu)
+    zy_check_addition(TableA,TableB,zy,zhuzhai,zhuhu)

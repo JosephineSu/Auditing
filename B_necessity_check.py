@@ -10,10 +10,7 @@ from typing import Any
 
 # Year = datetime.datetime.now().year
 # Month = datetime.datetime.now().month
-B_necessity_data = {'year':[],'sid':[],'scode':[],'code':[],'提示内容':[],'townname':[],'vname':[]}
-B_necessity_result = pd.DataFrame(B_necessity_data)
-B_necessity_result = B_necessity_result[['year','sid','scode','code','提示内容','townname','vname']]
-
+B_necessity_result = pd.DataFrame()
 
 def insert_to_pd(data):
     global B_necessity_result
@@ -40,17 +37,19 @@ def Table(table, code):
         return 0
 
 
-def B_necessity_check(tableB,zhuhu,zhuzhai,xiaoqu):
+def B_necessity_check(tableB,zhuhu,zhuzhai,xiaoqu,result_table):
     mylogger.logger.debug("B_necessity_check init..")
     B,M = 92,993
     E = 95
-
+    global B_necessity_result
+    B_necessity_result.drop( B_necessity_result.index, inplace=True)
+    B_necessity_result = result_table
     # B1部分    住房基本情况
     #B1.1    期末现住房基本情况
     #超界错误。b101 - b116重写，0825lw
     #B101 ?: "B101填报错误"
     #if tableB['B101']:
-    result = open(r'D:\研一\审核程序\src\审核结果输出\B_necessity_CheckResult.txt', 'w')
+    # result = open(r'D:\研一\审核程序\src\审核结果输出\B_necessity_CheckResult.txt', 'w')
     for row in tableB.iterrows():
         single_row = row[1]
         #zhuzhai对应M1，zhuhu对应M2
@@ -58,13 +57,18 @@ def B_necessity_check(tableB,zhuhu,zhuzhai,xiaoqu):
         one_zhuhu = zhuhu[zhuhu['HHID'] == family_sid]
         one_zhuzhai = zhuzhai[zhuzhai['HID'] == family_sid[:-2]]
         # Year = Table(single_row, "YEAR")
-        Year = int(single_row['YEAR'])
+        Year = int(float(single_row['YEAR']))
+
+        # print(Year,single_row['YEAR'])
         scode = single_row['SCODE']
         qu_vid = family_sid[0:15]
+        # qu = xiaoqu[xiaoqu['VID'] == qu_vid]
+        # townname = qu['TOWNNAME'].values[0]
+        # vname = qu['VNAME'].values[0]
         qu = xiaoqu[xiaoqu['vID'] == qu_vid]
         townname = qu['townName'].values[0]
         vname = qu['vName'].values[0]
-        dict = {'year':Year,'sid':family_sid,'scode':scode,'townname':townname,'vname':vname}
+        dict = {'year':str(single_row['YEAR']),'sid':family_sid,'scode':scode,'townname':townname,'vname':vname}
 
         # result.write(single_row['SID']+":")
         # if pd.isnull(single_row['B101']) == False:
@@ -388,9 +392,9 @@ def B_necessity_check(tableB,zhuhu,zhuzhai,xiaoqu):
 
                     if single_row['B142'] / data < 0 or single_row['B142'] / data >= 0.15:
                         dict['code'] = "B140={},B142={}".format(data,single_row['B142'])
-                        dict['提示内容'] = '新购住房建筑面积越界'
+                        dict['提示内容'] = '贷款利率越界'
                         insert_to_pd(dict)
-                        result.write('贷款利率越界')
+
                     if single_row['B143'] < 3 or single_row['B143'] > 30:
                         dict['code'] = "B140={},B143={}".format(data, single_row['B143'])
                         dict['提示内容'] = '还款年限越界'
@@ -625,7 +629,10 @@ def B_necessity_check(tableB,zhuhu,zhuzhai,xiaoqu):
                     insert_to_pd(dict)
 
         # print('done!')
-    result.close()
+
+    return B_necessity_result
+
+
 
 
 if __name__ == "__main__":
@@ -639,5 +646,10 @@ if __name__ == "__main__":
     zhuzhai = read_csv(zhuzhai_path)
     zhuhu = read_csv(zhuhu_path)
     xiaoqu = read_csv(xiaoqu_path)
-    B_necessity_check(tableB,zhuhu,zhuzhai,xiaoqu)
-    B_necessity_result.to_csv('B_necessity_result.csv',encoding='utf_8_sig')
+
+    B_necessity_data = {'year': [], 'sid': [], 'scode': [], 'code': [], '提示内容': [], 'townname': [], 'vname': []}
+    B_necessity_result = pd.DataFrame(B_necessity_data)
+    B_necessity_result = B_necessity_result[['year', 'sid', 'scode', 'code', '提示内容', 'townname', 'vname']]
+
+    B_necessity_check(tableB,zhuhu,zhuzhai,xiaoqu,B_necessity_result)
+    B_necessity_result.to_csv('B_necessity_result.csv',encoding='utf_8')

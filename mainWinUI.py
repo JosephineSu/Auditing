@@ -130,7 +130,7 @@ class Ui_MainWindow(object):
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
         self.export_taizhang = QtWidgets.QPushButton(self.function_pannel)
-        self.export_taizhang.setCursor(QtGui.QCursor(QtCore.Qt.UpArrowCursor))
+        self.export_taizhang.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         self.export_taizhang.setObjectName("export_taizhang")
         self.horizontalLayout.addWidget(self.export_taizhang)
         self.verticalLayout_5.addWidget(self.function_pannel)

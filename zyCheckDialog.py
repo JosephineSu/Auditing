@@ -57,6 +57,7 @@ class zyCheckDialog(QDialog,Ui_zyCheckDialog):
         Zn = self.zy_necessity.isChecked()
         Zs = self.zy_suggestion.isChecked()
         Za = self.zy_addition.isChecked()
+        Zi = self.zy_independent.isChecked()
         townRange = 0
         monthRange = 0
         directory = self.dirlineEdit.text()
@@ -72,7 +73,7 @@ class zyCheckDialog(QDialog,Ui_zyCheckDialog):
             monthUpperValue = self.monthUpperSpinBox.value()
             monthRange = monthLowValue * 100 + monthUpperValue
 
-        return Zn,Zs,Za,townRange,monthRange,directory
+        return Zn,Zs,Za,Zi,townRange,monthRange,directory
 
 
 if __name__ == '__main__':

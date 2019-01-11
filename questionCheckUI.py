@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'questionCheckUI.ui'
 #
-# Created by: PyQt5 UI code generator 5.10
+# Created by: PyQt5 UI code generator 5.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -32,6 +32,9 @@ class Ui_questionCheck(object):
         self.B_suggestion = QtWidgets.QCheckBox(self.groupBox)
         self.B_suggestion.setObjectName("B_suggestion")
         self.verticalLayout.addWidget(self.B_suggestion)
+        self.B_independent = QtWidgets.QCheckBox(self.groupBox)
+        self.B_independent.setObjectName("B_independent")
+        self.verticalLayout.addWidget(self.B_independent)
         self.horizontalLayout_2.addLayout(self.verticalLayout)
         self.horizontalLayout.addWidget(self.groupBox)
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
@@ -93,6 +96,7 @@ class Ui_questionCheck(object):
         self.A_suggestion.setText(_translate("questionCheck", "问卷A审核-提示性"))
         self.B_necessity.setText(_translate("questionCheck", "问卷B审核-必要性"))
         self.B_suggestion.setText(_translate("questionCheck", "问卷B审核-提示性"))
+        self.B_independent.setText(_translate("questionCheck", "问卷B-独立审核"))
         self.groupBox_2.setTitle(_translate("questionCheck", "调查小区范围"))
         self.allRadioButton.setText(_translate("questionCheck", "全部"))
         self.partRadioButton.setText(_translate("questionCheck", "选择"))

@@ -50,6 +50,13 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QCheckBox" name="B_independent">
+          <property name="text">
+           <string>问卷B-独立审核</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
      </layout>
