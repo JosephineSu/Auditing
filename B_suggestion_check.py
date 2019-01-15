@@ -62,7 +62,7 @@ def B_suggestion_check(tableB, zhuhu, zhuzhai,xiaoqu,result_table):
         one_zhuzhai = zhuzhai[zhuzhai['HID'] == family_sid[:-2]]
         # Year = Table(single_row, "YEAR")
         Year = int(float(single_row['YEAR']))
-        print(Year)
+        # print(Year)
         scode = single_row['SCODE']
         qu_vid = family_sid[0:15]
         qu = xiaoqu[xiaoqu['VID'] == qu_vid]

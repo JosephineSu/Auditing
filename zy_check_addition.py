@@ -11,10 +11,15 @@ def spliteFamily(table):
         hu_data = hu_data.sort_values(by='CODE')
         yield hu_data
 
-def Table(table,code):
+
+def Table(table, code):
     t = table[code]
+    # print("tabledata:",t)
     if t.empty == False:
+        if pd.isnull(t.values[0]) == True:
+            return 0
         if type(t.values[0]) == type("str"):
+            # print("字符串类型：",type(t.values[0]))
             return int(t.values[0])
         return t.values[0]
     else:
