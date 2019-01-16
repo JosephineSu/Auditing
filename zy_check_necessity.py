@@ -185,6 +185,7 @@ def self_use_check(family_zy,code,top,top_tip,dict,lenM=1):
         insert_to_pd(dict)
         # print(top_tip)
 
+
 # A表，B表，账页表，住宅表，住户表,小区表
 def zy_check_necessity(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
     mylogger.logger.debug("zy_necessity init...")
@@ -288,7 +289,7 @@ def zy_check_necessity(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
             for row in A.iterrows():
                 A_member = row[1]
                 person = int(A_member["A100"])
-                # 取户主姓名，填家庭帐审核结果中的name
+                # 取户主姓名(家庭帐审核结果中的name)
                 if person == 1:
                     hu_zhu = A_member['A101']
                 if person > 0:
@@ -500,7 +501,7 @@ def zy_check_necessity(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
                 else:
                     self_use_check(family_zy,con["code"],con["top"],con["topTip"],dict)
 
-    # return zy_necessity_result
+    return zy_necessity_result
 
     end = datetime.datetime.now()
     print("运行时间：",end - begin)

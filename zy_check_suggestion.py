@@ -5,6 +5,7 @@ from decimal import Decimal
 import myLogging as mylogger
 
 zy_suggestion_result = pd.DataFrame()
+dict = {}
 
 def spliteFamily(table):
     sid_array = table["SID"].drop_duplicates()
@@ -47,6 +48,7 @@ def moneySum(zy,code):
             # return Decimal(str(sum(result['MONEY'].apply(Decimal))))
     return 0
 
+
 # 获取某个编码的数量 AMOUNT 1
 def amountSum(zy,code,person=0):
     # if person != 0:
@@ -73,6 +75,7 @@ def insert_to_pd(data):
     global zy_suggestion_result
     zy_suggestion_result = zy_suggestion_result.append(data, ignore_index=True)
 
+
 def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
     mylogger.logger.debug("zy_check_suggestion init..")
     begin = datetime.datetime.now()
@@ -86,9 +89,14 @@ def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
     global zy_suggestion_result
     zy_suggestion_result.drop(zy_suggestion_result.index,inplace=True)
     zy_suggestion_result = result
-
     zy = zy.sort_values(by='SID')
     zy_families = spliteFamily(zy)
+    zy["PERSON"] = zy["PERSON"].apply(Decimal)
+    zy["CODE"].apply(str)
+    zy["CODE"] = zy["CODE"].apply(lambda x: x.strip())
+    xiaoqu["VID"] = xiaoqu["VID"].apply(str)
+    xiaoqu["VID"] = xiaoqu["VID"].apply(lambda x: x.strip())
+
     for zy_family in zy_families:
         family_sid = zy_family['SID'].values[0]
         # family_sid = Table(zy_family,'SID')
@@ -97,7 +105,6 @@ def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
         if A.empty == True:
             # print(family_sid+"A表中无此户")
             continue
-
         one_zhuhu = zhuhu[zhuhu['HHID'] == family_sid]
         one_zhuzhai = zhuzhai[zhuzhai['HID'] == HID]
         B = TableB[TableB['SID'] == family_sid]
@@ -111,16 +118,22 @@ def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
         # vname = qu['vName'].values[0]
         ChangeH = 0
         # surveyType = int(one_zhuhu['SURVEYTYPE'].values[0])
+        # Year = Table(zy_family, 'YEAR')
+        # Month = Table(zy_family, 'MONTH')
         surveyType = Table(one_zhuhu,"SURVEYTYPE")
-        Year = Table(zy_family, 'YEAR')
-        Month = Table(zy_family, 'MONTH')
         TaskCode = Table(B,'TASK')
         task = TaskCode
         scode = zy_family['SCODE'].values[0]
         # print(scode)
+
+        # 账页可能是跨年、多个月份的数据，所以要选择去最小年份的最小月份来算
+        Year = min(list(set(zy_family["YEAR"])))
+        Year_arr = zy_family[zy_family["YEAR"] == Year]
+        Month = min (list(set(Year_arr["MONTH"])))
+
         openYear = Table(one_zhuhu, 'OPENYEAR')
 
-        dict = {'year': str(Year), 'month': str(Month), 'task': str(task), 'scode': scode, 'sid': family_sid,'person':str(99),\
+        dict = {'year': str(Table(zy_family, 'YEAR')), 'month': str(Table(zy_family, 'MONTH')), 'task': str(task), 'scode': scode, 'sid': family_sid,'person':str(99),\
                 'townname':townname,'vname':vname}
 
         if pd.isnull(openYear) == False:
@@ -132,135 +145,32 @@ def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
             if openYear == Year and openMonth <= Month and openMonth > Month - 2:
                 ChangeH = 1
         else:
-            lenM = Month + 1
+            # lenM = Month + 1
+            lenM = 0
+            year_set = list(set(zy_family["YEAR"]))
+            # print(year_set)
+            for year in year_set:
+                month_set = zy_family[zy_family["YEAR"] == year]["MONTH"]
+                lenM += len(list(set(month_set)))
             if openYear == Year and openMonth <= Month:
                 ChangeH = 1
         # print(TaskCode,Table(A, 'A102'),Table(one_zhuzhai,"M105"),surveyType,family_sid,Table(A, "A206"), Table(A, "A205"),moneySum(zy_family,"22"))
         if (TaskCode >= 1 and TaskCode <= 7) and Table(A, 'A102') != 3 and Table(one_zhuzhai,"M105") == 1 and surveyType != 2:
-            # print(family_sid)
-            #收入成本相关
-            # print(family_sid,Table(B,'B126'),Table(B,'B139'),moneySum(zy_family,"560611"),moneySum(zy_family,"521111"))
-            sum1 = moneySum(zy_family,"560611")
-            sum2 = moneySum(zy_family,"521111")
-            if Table(B,'B126') != 1 and Table(B,'B139') == 0 and sum1+sum2 > 0:
-                value = "B126={},B139={},'560611'={},'521111'={}".format(Table(B,'B126'),Table(B,'B139'),sum1,sum2)
-                dict['code'] = value
-                dict['核实内容'] = "有住房还贷支出或利息支出 ,本宅B表无还贷情况且期内没有新购住房(B126,b139)，核实是否1年前贷款购买本宅外住房"
-                insert_to_pd(dict)
-
-            b1 = Table(B,"B128")
-            b2 = Table(B,"B131")
-            if b1 + b2 > 0 and moneySum(zy_family,"230511") == 0:
-                value = "B128={},B131={},'230511'={}".format(b1,b2,moneySum(zy_family,"230511"))
-                dict['code'] = value
-                dict['核实内容'] = "b表有房屋出租信息(b128,b131),但没有租金收入"
-                insert_to_pd(dict)
-                # print("b表有房屋出租信息(b128,b131),但没有租金收入")
-
-            # 消费相关
-            if surveyType == 1:
-                if amountSum(zy_family,"311015") > lenM * 300:
-                    value = "code=311015,amount={}".format(amountSum(zy_family,"311015"))
-                    dict['code'] = value
-                    dict['核实内容'] = "有可能将玉米作为饲料编入食品消费中,请核实是否编码错误！"
-                    insert_to_pd(dict)
-                    # print("有可能将玉米作为饲料编入食品消费中,请核实是否编码错误！")
-                if amountSum(zy_family, "31102") > lenM * 200:
-                    value = "code=31102,amount={}".format(amountSum(zy_family, "31102"))
-                    dict['code'] = value
-                    dict['核实内容'] = "有可能将薯类作为饲料编入食品消费中,请核实是否编码错误"
-                    insert_to_pd(dict)
-                    # print("有可能将薯类作为饲料编入食品消费中,请核实是否编码错误")
-                if amountSum(zy_family, "311031") > lenM * 50:
-                    value = "code=311031,amount={}".format(amountSum(zy_family, "311031"))
-                    dict['code'] = value
-                    dict['核实内容'] = "有可能将大豆作为豆制品编入食品消费中,请核实是否编码错误"
-                    insert_to_pd(dict)
-                    # print("有可能将大豆作为豆制品编入食品消费中,请核实是否编码错误")
-                if amountSum(zy_family, "31104") > lenM * 100:
-                    value = "code=31104,amount={}".format(amountSum(zy_family, "31104"))
-                    dict['code'] = value
-                    dict['核实内容'] = "食用油消费过大,请核实是否编码错误"
-                    insert_to_pd(dict)
-                    # print("食用油消费过大,请核实是否编码错误")
-                if amountSum(zy_family, "31105") > lenM * 500:
-                    value = "code=31105,amount={}".format(amountSum(zy_family, "31105"))
-                    dict['code'] = value
-                    dict['核实内容'] = "蔬菜和食用菌消费过大,请核实是否编码错误"
-                    insert_to_pd(dict)
-                    # print("蔬菜和食用菌消费过大,请核实是否编码错误")
-                if amountSum(zy_family, "31106") > lenM * 300:
-                    value = "code=31106,amount={}".format(amountSum(zy_family, "31106"))
-                    dict['code'] = value
-                    dict['核实内容'] = "畜肉类消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！"
-                    insert_to_pd(dict)
-                    # print("畜肉类消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！")
-                if amountSum(zy_family, "31107") > lenM * 100:
-                    value = "code=31107,amount={}".format(amountSum(zy_family, "31107"))
-                    dict['code'] = value
-                    dict['核实内容'] = "禽肉类消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！"
-                    insert_to_pd(dict)
-                    # print("禽肉类消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！")
-                if amountSum(zy_family, "31108") > lenM * 100:
-                    value = "code=31108,amount={}".format(amountSum(zy_family, "31108"))
-                    dict['code'] = value
-                    dict['核实内容'] = "水产品消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！"
-                    insert_to_pd(dict)
-                    # print("水产品消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！")
-                if amountSum(zy_family, "31109") > lenM * 100:
-                    value = "code=31109,amount={}".format(amountSum(zy_family, "31109"))
-                    dict['code'] = value
-                    dict['核实内容'] = "蛋类消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！"
-                    insert_to_pd(dict)
-                    # print("蛋类消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！")
-                if amountSum(zy_family, "31110") > lenM * 300:
-                    value = "code=31110,amount={}".format(amountSum(zy_family, "31110"))
-                    dict['code'] = value
-                    dict['核实内容'] = "奶类的消费过大,请核实！"
-                    insert_to_pd(dict)
-                    # print("奶类的消费过大,请核实！")
-                if amountSum(zy_family, "31111") > lenM * 500:
-                    value = "code=31111,amount={}".format(amountSum(zy_family, "31111"))
-                    dict['code'] = value
-                    dict['核实内容'] = "干鲜瓜果消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！"
-                    insert_to_pd(dict)
-                    # print("干鲜瓜果消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！")
-                if amountSum(zy_family, "31112") > lenM * 150:
-                    value = "code=31112,amount={}".format(amountSum(zy_family, "31112"))
-                    dict['code'] = value
-                    dict['核实内容'] = "糖果糕点类消费过大，有可能将宴请支出编入食品消费中,请核实是否编码错误！"
-                    insert_to_pd(dict)
-                    # print("糖果糕点类消费过大，有可能将宴请支出编入食品消费中,请核实是否编码错误！")
-                if amountSum(zy_family, "312111") > lenM * 400:
-                    value = "code=312111,amount={}".format(amountSum(zy_family, "312111"))
-                    dict['code'] = value
-                    dict['核实内容'] = "卷烟消费过大，有可能将宴请支出编入食品消费中,请核实是否编码错误！"
-                    insert_to_pd(dict)
-                    # print("卷烟消费过大，有可能将宴请支出编入食品消费中,请核实是否编码错误！")
-                if amountSum(zy_family, "312211") > lenM * 150:
-                    value = "code=312211,amount={}".format(amountSum(zy_family, "312211"))
-                    dict['code'] = value
-                    dict['核实内容'] = "啤酒消费过大，有可能将宴请支出编入食品消费中,请核实是否编码错误！"
-                    insert_to_pd(dict)
-                    # print("啤酒消费过大，有可能将宴请支出编入食品消费中,请核实是否编码错误！")
-                if amountSum(zy_family, "312221") > lenM * 200:
-                    value = "code=312221,amount={}".format(amountSum(zy_family, "312221"))
-                    dict['code'] = value
-                    dict['核实内容'] = "白酒消费过大，有可能将宴请支出编入食品消费中,请核实是否编码错误！"
-                    insert_to_pd(dict)
-                    # print("白酒消费过大，有可能将宴请支出编入食品消费中,请核实是否编码错误！")
-
             for row in A.iterrows():
                 A_member = row[1]
                 person = int(A_member['A100'])
                 name = A_member['A101']
+                if person == 1:
+                    hu_zhu = A_member['A101']
                 if person > 0:
-                    person_zy = zy_family[zy_family["PERSON"] == str(person)]
-                    money = moneySum(person_zy,"2") - moneySum(person_zy,"240511")
-                    if Table(A,"A106") < 16 and money > 0:
+                    person_zy = zy_family[zy_family["PERSON"] == person]
+                    if person == 99:
+                        name = hu_zhu
+                    money = moneySum(person_zy, "2") - moneySum(person_zy, "240511")
+                    if Table(A, "A106") < 16 and money > 0:
                         dict['person'] = str(person)
-                        dict['name']= name
-                        value = "A106={},'2'-'240511'={}".format(Table(A,"A106"),money)
+                        dict['name'] = name
+                        value = "A106={},'2'-'240511'={}".format(Table(A, "A106"), money)
                         dict['code'] = value
                         dict['核实内容'] = "年龄低于16岁，有工资、经营等收入，核实是否为童工？"
                         insert_to_pd(dict)
@@ -271,40 +181,174 @@ def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
                     # sum1 = moneySum(person_zy,"22")
                     # sum2 = moneySum(person_zy,"2201") + moneySum(person_zy,"2202") + moneySum(person_zy,"2203") + \
                     #        moneySum(person_zy,"2204") + moneySum(person_zy,"2206")
-                    # print(person, Table(A, "A206"), Table(A, "A205"), moneySum(zy_family,"220511"))
                     # if 5 < Table(A, "A206") < 21 and Table(A,"A205") == 7 and sum1 - sum2 == 0:
-                    money = moneySum(person_zy,"220511")
+
+                    money = moneySum(zy_family, "220511")
                     if 5 < Table(A, "A206") < 21 and Table(A, "A205") == 7 and money == 0:
                         dict['person'] = str(person)
                         dict['name'] = name
-                        value = "A206={},A205={},'220511'={}".format(Table(A, "A206"),Table(A, "A205"),money)
+                        value = "A205={},A206={},'220511'={}".format(Table(A, "A205"), Table(A, "A206"), money)
                         dict['code'] = value
                         dict['核实内容'] = "从事第三产业经营（a206）的就业人员（a205）无第三产业收入"
                         insert_to_pd(dict)
                         # print("从事第三产业经营（a206）的就业人员（a205）无第三产业收入")
-                    # if 5 < Table(A, "A206") < 21 and Table(A,"A205") == 7 and sum1 - sum2 == 0:
-                    #     print("本期内从事第三产业经营（a206）的就业人员（a205）无第三产业收入")
 
+            #收入成本相关
+            # print(family_sid,Table(B,'B126'),Table(B,'B139'),moneySum(zy_family,"560611"),moneySum(zy_family,"521111"))
+            sum1 = moneySum(zy_family,"560611")
+            sum2 = moneySum(zy_family,"521111")
+            dict['person'] = str(99)
+            dict['name'] = hu_zhu
+            if Table(B,'B126') != 1 and Table(B,'B139') == 0 and sum1+sum2 > 0:
+                value = "B126={},B139={},'560611'={},'521111'={}".format(Table(B,'B126'),Table(B,'B139'),sum1,sum2)
+                dict['code'] = value
+                dict['核实内容'] = "有住房还贷支出或利息支出 ,本宅B表无还贷情况且期内没有新购住房(B126,b139)，核实是否1年前贷款购买本宅外住房"
+                insert_to_pd(dict)
+
+            b1 = Table(B,"B128")
+            b2 = Table(B,"B131")
+            money = moneySum(zy_family,"230511")
+            # print(b1,b2,money)
+            if b1 + b2 > 0 and money == 0:
+                value = "B128={},B131={},'230511'={}".format(b1,b2,money)
+                dict['code'] = value
+                dict['核实内容'] = "b表有房屋出租信息(b128,b131),但没有租金收入"
+                insert_to_pd(dict)
+                print(b1,b2,money,"b表有房屋出租信息(b128,b131),但没有租金收入")
+
+            # 消费相关
+            if surveyType == 1:
+                if amountSum(zy_family,"311015") > lenM * 300:
+                    value = "code=311015,amount={}".format(amountSum(zy_family,"311015"))
+                    dict['code'] = value
+                    dict['核实内容'] = "有可能将玉米作为饲料编入食品消费中,请核实是否编码错误！"
+                    insert_to_pd(dict)
+
+                if amountSum(zy_family, "31102") > lenM * 200:
+                    value = "code=31102,amount={}".format(amountSum(zy_family, "31102"))
+                    dict['code'] = value
+                    dict['核实内容'] = "有可能将薯类作为饲料编入食品消费中,请核实是否编码错误"
+                    insert_to_pd(dict)
+
+                if amountSum(zy_family, "311031") > lenM * 50:
+                    value = "code=311031,amount={}".format(amountSum(zy_family, "311031"))
+                    dict['code'] = value
+                    dict['核实内容'] = "有可能将大豆作为豆制品编入食品消费中,请核实是否编码错误"
+                    insert_to_pd(dict)
+
+                if amountSum(zy_family, "31104") > lenM * 100:
+                    value = "code=31104,amount={}".format(amountSum(zy_family, "31104"))
+                    dict['code'] = value
+                    dict['核实内容'] = "食用油消费过大,请核实是否编码错误"
+                    insert_to_pd(dict)
+
+                if amountSum(zy_family, "31105") > lenM * 500:
+                    value = "code=31105,amount={}".format(amountSum(zy_family, "31105"))
+                    dict['code'] = value
+                    dict['核实内容'] = "蔬菜和食用菌消费过大,请核实是否编码错误"
+                    insert_to_pd(dict)
+
+                if amountSum(zy_family, "31106") > lenM * 300:
+                    value = "code=31106,amount={}".format(amountSum(zy_family, "31106"))
+                    dict['code'] = value
+                    dict['核实内容'] = "畜肉类消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！"
+                    insert_to_pd(dict)
+
+                if amountSum(zy_family, "31107") > lenM * 100:
+                    value = "code=31107,amount={}".format(amountSum(zy_family, "31107"))
+                    dict['code'] = value
+                    dict['核实内容'] = "禽肉类消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！"
+                    insert_to_pd(dict)
+
+                if amountSum(zy_family, "31108") > lenM * 100:
+                    value = "code=31108,amount={}".format(amountSum(zy_family, "31108"))
+                    dict['code'] = value
+                    dict['核实内容'] = "水产品消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！"
+                    insert_to_pd(dict)
+
+                if amountSum(zy_family, "31109") > lenM * 100:
+                    value = "code=31109,amount={}".format(amountSum(zy_family, "31109"))
+                    dict['code'] = value
+                    dict['核实内容'] = "蛋类消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！"
+                    insert_to_pd(dict)
+
+                if amountSum(zy_family, "31110") > lenM * 300:
+                    value = "code=31110,amount={}".format(amountSum(zy_family, "31110"))
+                    dict['code'] = value
+                    dict['核实内容'] = "奶类的消费过大,请核实！"
+                    insert_to_pd(dict)
+
+                if amountSum(zy_family, "31111") > lenM * 500:
+                    value = "code=31111,amount={}".format(amountSum(zy_family, "31111"))
+                    dict['code'] = value
+                    dict['核实内容'] = "干鲜瓜果消费过大,有可能将宴请支出编入食品消费中,请核实是否编码错误！"
+                    insert_to_pd(dict)
+
+                if amountSum(zy_family, "31112") > lenM * 150:
+                    value = "code=31112,amount={}".format(amountSum(zy_family, "31112"))
+                    dict['code'] = value
+                    dict['核实内容'] = "糖果糕点类消费过大，有可能将宴请支出编入食品消费中,请核实是否编码错误！"
+                    insert_to_pd(dict)
+
+                if amountSum(zy_family, "312111") > lenM * 400:
+                    value = "code=312111,amount={}".format(amountSum(zy_family, "312111"))
+                    dict['code'] = value
+                    dict['核实内容'] = "卷烟消费过大，有可能将宴请支出编入食品消费中,请核实是否编码错误！"
+                    insert_to_pd(dict)
+
+                if amountSum(zy_family, "312211") > lenM * 150:
+                    value = "code=312211,amount={}".format(amountSum(zy_family, "312211"))
+                    dict['code'] = value
+                    dict['核实内容'] = "啤酒消费过大，有可能将宴请支出编入食品消费中,请核实是否编码错误！"
+                    insert_to_pd(dict)
+
+                if amountSum(zy_family, "312221") > lenM * 200:
+                    value = "code=312221,amount={}".format(amountSum(zy_family, "312221"))
+                    dict['code'] = value
+                    dict['核实内容'] = "白酒消费过大，有可能将宴请支出编入食品消费中,请核实是否编码错误！"
+                    insert_to_pd(dict)
+
+    end = datetime.datetime.now()
+    print("run time:",end - begin)
     return zy_suggestion_result
+
 
 # 打开csv文件 返回DataFrame对象
 def read_csv(path):
     with open(path, 'r') as f:
-        file = pd.read_csv(f, header=0,low_memory=False)
-    return file
+        df = pd.read_csv(f, header=0,low_memory=False)
+        col = colUpper(df.columns.values.tolist())
+        df = df.rename(columns=col)
+    return df
+
+
+# 将所有列名换成大写
+def colUpper(col):
+    dict = {}
+    for key in col:
+        value = key.upper()
+        # print(value)
+        dict[key] = value
+    return dict
+
 
 if __name__ == '__main__':
     # A_path = u"D:/研一/项目/CheckProgram/Auditing/输入文件夹/A310151.18.csv"
     # B_path = u"D:/研一/审核程序/src/输入文件夹/B310151.18.csv"
     # zy_path = u"D:/研一/项目/CheckProgram/Auditing/输入文件夹/D310151.1806.csv"
     # global result
-    A_path = u"D:\研一\项目\测试数据\国家点6月A问卷.csv"
-    B_path = u"D:\研一\项目\测试数据\国家点B问卷.csv"
-    zy_path = u"D:\研一\项目\测试数据\国家点12-6月账页数据.csv"
+    # A_path = u"D:\研一\项目\测试数据\国家点6月A问卷.csv"
+    # B_path = u"D:\研一\项目\测试数据\国家点B问卷.csv"
+    # zy_path = u"D:\研一\项目\测试数据\国家点12-6月账页数据.csv"
+
+    A_path = r"D:\研一\项目\测试数据\外部程序测试数据\外部程序测试数据\18年A卷数据.csv"
+    B_path = r"D:\研一\项目\测试数据\外部程序测试数据\外部程序测试数据\18年B卷数据.csv"
+    zy_path = r"D:\研一\项目\测试数据\外部程序测试数据\外部程序测试数据\18年账页数据.csv"
+    xiaoqu_path = r"D:\研一\项目\测试数据\外部程序测试数据\外部程序测试数据\S310151.18_1.csv"
 
     zhuhu_path = u"D:/研一/项目/CheckProgram/Auditing/输入文件夹/住户样本310151.18.csv"
     zhuzhai_path = u"D:/研一/项目/CheckProgram/Auditing/输入文件夹/住宅名录310151.18.csv"
-    xiaoqu_path = u"D:\研一\项目\CheckProgram\Auditing\输入文件夹\小区名录310151.18.csv"
+    # xiaoqu_path = u"D:\研一\项目\CheckProgram\Auditing\输入文件夹\小区名录310151.18.csv"
 
     TableA = read_csv(A_path)
     TableB = read_csv(B_path)

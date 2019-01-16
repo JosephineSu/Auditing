@@ -632,7 +632,23 @@ def B_necessity_check(tableB,zhuhu,zhuzhai,xiaoqu,result_table):
 
     return B_necessity_result
 
+# 打开csv文件 返回DataFrame对象
+def read_csv(path):
+    with open(path, 'r') as f:
+        df = pd.read_csv(f, header=0,low_memory=False)
+        col = colUpper(df.columns.values.tolist())
+        df = df.rename(columns=col)
+    return df
 
+
+# 将所有列名换成大写
+def colUpper(col):
+    dict = {}
+    for key in col:
+        value = key.upper()
+        # print(value)
+        dict[key] = value
+    return dict
 
 
 if __name__ == "__main__":
