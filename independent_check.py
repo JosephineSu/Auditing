@@ -5,6 +5,7 @@ import datetime
 import myLogging as mylogger
 
 zy_independent_result = pd.DataFrame()
+dict = {}
 
 def insert_to_pd(data):
     global zy_independent_result
@@ -112,7 +113,15 @@ def independent_check(tableA,tableB,zy,zhuhu,xiaoqu,codes,result_table):
     zhuhu = zhuhu.drop(0)
     zy = zy.sort_values(by='SID')
     zy = add_column(zy,codes)
+    zy["PERSON"] = zy["PERSON"].apply(Decimal)
+    zy["NOTE"] = zy["NOTE"].apply(Decimal)
+    # zy["CODE"] = zy["CODE"].apply(str)
+    # zy["CODE"] = zy["CODE"].apply(lambda x: x.strip())
     zy_families = spliteFamily(zy)
+
+    xiaoqu["VID"] = xiaoqu["VID"].apply(str)
+    xiaoqu["VID"] = xiaoqu["VID"].apply(lambda x: x.strip())
+
     for zy_family in zy_families:
         family_sid = zy_family['SID'].values[0]
         A = tableA[tableA['SID'] == family_sid]
@@ -123,16 +132,452 @@ def independent_check(tableA,tableB,zy,zhuhu,xiaoqu,codes,result_table):
         # print(B)
         one_zhuhu = zhuhu[zhuhu['HHID'] == family_sid]
         qu_vid = family_sid[0:15]
-        qu = xiaoqu[xiaoqu['vID'] == qu_vid]
-        townname = qu['townName'].values[0]
-        vname = qu['vName'].values[0]
-        coun = str(qu['coun'].values[0])
+        qu = xiaoqu[xiaoqu['VID'] == qu_vid]
+        townname = qu['TOWNNAME'].values[0]
+        vname = qu['VNAME'].values[0]
+        coun = str(qu['COUN'].values[0])
         task = str(B['TASK'].values[0])
         scode = zy_family['SCODE'].values[0]
         year = str(zy_family['YEAR'].values[0])
         month = str(zy_family['MONTH'].values[0])
         dict = {'year':year, 'task':task, 'month': month, 'coun':coun,'scode':scode, 'sid':family_sid,'person':str(99), 'townname':townname, 'vname':vname}
 
+        huzhu = ""
+        # zycheck about tableA and zy
+        # if Table(one_zhuhu,'M217') == 1:
+        for rowA in A.iterrows():
+            A_member = rowA[1]
+            person = int(A_member['A100'])
+            person_zy = zy_family[zy_family['PERSON'] == person]
+            # print(person_zy)
+            dict['person'] = str(person)
+            dict['name'] = A_member['A101']
+            if person == 1:
+                huzhu = A_member['A101']
+
+            # 审核要求教育相关
+            age = int(year) - int(A_member['A105_1'])
+            money3611 = moneySum(zy_family, '3611')
+            A112 = A_member['A112']
+            A113 = A_member['A113']
+            if money3611 != 0 and age < 12:
+                if A112 != 1 or A113 != 1:
+                    dict['code'] = "'3611'={},A112={},A113={}".format(money3611, A112, A113)
+                    dict['核实内容'] = "有3611学前教育费用，A112应为1，A113应为1，是否填错或漏填？请核实!"
+                    insert_to_pd(dict)
+
+            money3612 = moneySum(zy_family, '3612')
+            if money3612 != 0 and age < 12:
+                if A112 != 1 or A113 != 2:
+                    dict['code'] = "'3612'={},A112={},A113={}".format(money3612, A112, A113)
+                    dict['核实内容'] = "有3612小学教育费用，A112应为1，A113应为2，是否填错或漏填？请核实!"
+                    insert_to_pd(dict)
+            money3613 = moneySum(zy_family, '3613')
+            if money3613 != 0 and age < 12:
+                if A112 != 1 or A113 != 3:
+                    dict['code'] = "'3613'={},A112={},A113={}".format(money3613, A112, A113)
+                    dict['核实内容'] = "有3613小学教育费用，A112应为1，A113应为3，是否填错或漏填？请核实!"
+                    insert_to_pd(dict)
+            money3614 = moneySum(zy_family, '3614')
+            if money3614 != 0 and age < 12:
+                if A112 != 1 or A113 != 4:
+                    dict['code'] = "'3614'={},A112={},A113={}".format(money3614, A112, A113)
+                    dict['核实内容'] = "有3614小学教育费用，A112应为1，A113应为4，是否填错或漏填？请核实!"
+                    insert_to_pd(dict)
+            money3615 = moneySum(zy_family, '3615')
+            if money3615 != 0 and age < 12:
+                if A112 != 1 or A113 != 2:
+                    dict['code'] = "'3615'={},A112={},A113={}".format(money3615, A112, A113)
+                    dict['核实内容'] = "有3615小学教育费用，A112应为1，A113应为5，是否填错或漏填？请核实!"
+                    insert_to_pd(dict)
+            money3616 = moneySum(zy_family, '3616')
+            if money3616 != 0 and age < 12:
+                if A112 != 1 or A113 != 2:
+                    dict['code'] = "'3616'={},A112={},A113={}".format(money3616, A112, A113)
+                    dict['核实内容'] = "有3616小学教育费用，A112应为1，A113应为6，是否填错或漏填？请核实!"
+                    insert_to_pd(dict)
+
+            # print(type(A_member['A204']))
+            A204 = A_member['A204']
+            A205 = A_member['A205']
+            A208 = A_member['A208']
+            m1 = moneySum(person_zy, "12")
+            m2 = moneySum(person_zy, "2101")
+            m3 = moneySum(person_zy, "22")
+            if A205 == 1 and A204 == 1 and A208 != 0:
+                if m1 + m2 + m3 == 0:
+                    dict['code'] = "A205={},A204={},A208={},'12'={},'2101'={},'22'={}".format(A205, A204, A208, m1, m2,
+                                                                                              m3)
+                    dict['核实内容'] = "雇主漏填收入，请核实！"
+                    insert_to_pd(dict)
+
+            if A204 == 1 and 2 <= A205 <= 5 and A208 != 0:
+                m4 = moneySum(person_zy, "210221")
+                if m2 + m4 == 0:
+                    dict['code'] = "A204={},A205={},A208={},'210221'={},'2101'={}".format(A204, A205, A208, m4, m2)
+                    dict['核实内容'] = "此人漏填工资性收入，请核实！"
+                    insert_to_pd(dict)
+
+            if A204 != 1 or (A205 < 2 or A205 > 5) or A208 == 0:
+                if m2 != 0:
+                    dict['code'] = "A204={},A205={},A208={},'2101'={}".format(A204, A205, A208, m2)
+                    dict['核实内容'] = "多填工资性收入，请核实！"
+                    insert_to_pd(dict)
+
+            if A_member['A204'] == 1 and A_member['A205'] == 7 and A_member['A208'] != 0:
+                if m3 == 0:
+                    dict['code'] = "A204={},A205={},A208={},'22'={}".format(A204, A205, A208, m3)
+                    dict['核实内容'] = "漏填非农自营收入，请核实！"
+                    insert_to_pd(dict)
+
+            if A_member['A204'] != 1 or A_member['A205'] != 7 or A_member['A208'] == 0:
+                if m3 != 0:
+                    dict['code'] = "A204={},A205={},A208={},'2101'={}".format(A204, A205, A208, m3)
+                    dict['核实内容'] = "多填非农自营收入，请核实！"
+                    insert_to_pd(dict)
+
+            if A_member['A206'] != 12:
+                if code_match(person_zy, "220911") == 1:
+                    dict['code'] = "A206={},'220911'={}".format(A_member['A206'], moneySum(person_zy, '220911'))
+                    dict['核实内容'] = "确有租赁和商务服务收入？请核实并注明具体收入内容！"
+                    insert_to_pd(dict)
+
+            A201 = A_member['A201']
+            A202 = A_member['A202']
+            m1 = moneySum(person_zy, "2401")
+            m11 = moneySum(person_zy, "240111")
+            m21 = moneySum(person_zy, "240121")
+            m91 = moneySum(person_zy, "240191")
+            if A201 == 1 or A201 == 2:
+                if A202 == 2 and code_match(person_zy, "2401") == 1 and code_match(person_zy, "240111") != 1:
+                    dict['code'] = "A201={},A202={},'2401'={},'240111'={}".format(A201, A202, m1, m11)
+                    dict['核实内容'] = "参加城镇职工养老保险，记账代码应填240111，请核实A202或编码是否正确。"
+                    insert_to_pd(dict)
+
+                if A202 == 4 or A202 == 5 and code_match(person_zy, "2401") == 1 and code_match(person_zy,
+                                                                                                "240191") != 1:
+                    dict['code'] = "A201={},A202={},'2401'={},'240191'={}".format(A201, A202, m1, m91)
+                    dict['核实内容'] = "参加其他养老保险，记账代码应填240191，请核实A202或编码是否正确。"
+                    insert_to_pd(dict)
+
+            if A201 == 3 and A_member['A106'] >= 60:
+                if A202 == 3 and code_match(person_zy, "2401") == 1 and code_match(person_zy, "240121") != 1:
+                    dict['code'] = "A201={},A202={},'2401'={},'240121'={}".format(A201, A202, m1, m21)
+                    dict['核实内容'] = "参加城镇居民养老保险，记账代码应填240121，请核实A202或编码是否正确。"
+                    insert_to_pd(dict)
+            if code_match(person_zy, '240191'):
+                dict['code'] = "'240191'={}".format(m91)
+                dict['核实内容'] = "有其他养老金？请核实"
+                insert_to_pd(dict)
+            if code_match(person_zy, "240111") == 1:
+                if A201 == 3 and A202 != 3 and A202 != 4 and A202 != 5:
+                    dict['code'] = "A201={},A202={},'240111'={}".format(A201, A202, m11, )
+                    dict['核实内容'] = "A201=3，为何有A202（4、5）之外的养老金收入？请核实!"
+                    insert_to_pd(dict)
+
+            if A_member['A106'] >= 60 and A202 != 6 and A202 != 0 and A204 == 2:
+                if moneySum(person_zy, "2401") == 0:
+                    dict['code'] = "A106={},A202={},A204={},'2401'={}".format(A_member['A106'], A202, A204, m1)
+                    dict['核实内容'] = "60岁以上为工作参保人员，没有任何养老金收入？请核实！"
+                    insert_to_pd(dict)
+
+            if (A201 == 1 or A201 == 2) and A202 != 4 and A202 != 5:
+                if code_match(person_zy, "240191") == 1:
+                    dict['code'] = "A201={},A202={},'240191'={}".format(A201, A202, m91)
+                    dict['核实内容'] = "A202≠4,5，为何有其他养老保险收入，请核实！"
+                    insert_to_pd(dict)
+                    # dict['核实内容'] =("此人为退休者、A202里面没有4或5，为何有其他养老保险收入，请核实！")
+
+            if A204 != 2 and code_match(person_zy, "240811") == 1:
+                dict['code'] = "A204={},'240811'={}".format(A204, moneySum(person_zy, "240811"))
+                dict['核实内容'] = "非失业人员，有失业保险金？请核实！"
+                insert_to_pd(dict)
+
+            if A201 == 3 and A204 == 1 and A202 == 2:
+                if moneySum(person_zy, "532111") == 0:
+                    dict['code'] = "A201={},A202={},'532111'={}".format(A201, A202, moneySum(person_zy, "532111"))
+                    dict['核实内容'] = "漏填个人缴纳的养老保险金，请核实！"
+                    insert_to_pd(dict)
+
+            if A202 != 1 and A202 != 5:
+                if code_match(person_zy, "532911") == 1:
+                    dict['code'] = "A202={},'532911'={}".format(A202, moneySum(person_zy, "532911"))
+                    dict['核实内容'] = "非农保镇保人员，为何有其他社保支出？请注明具体支出内容！"
+                    insert_to_pd(dict)
+
+            if A205 != 7:
+                if code_match(person_zy, "5513") == 1 or code_match(person_zy, "5514") == 1:
+                    dict['code'] = "A205={},'5513'={},'5514'={}".format(A205, moneySum(person_zy, "5513"),
+                                                                        moneySum(person_zy, '5514'))
+                    dict['核实内容'] = "不是非农自营对象，为何有生产性固定资产支出？请核实并注明具体情况！"
+                    insert_to_pd(dict)
+
+            # 多填农业自营收入（12 - --15）
+
+            if A202 == 4 or A202 == 6:
+                if code_match(person_zy, "532111") == 1:
+                    dict['code'] = "A202={},'532111'={}".format(A202, moneySum(person_zy, "532111"))
+                    dict['核实内容'] = "A202=4、6，为何有个人缴纳的养老保险支出，请查改！"
+                    insert_to_pd(dict)
+
+            A111 = A_member['A111']
+            if A111 == 4 or A111 == 5 or A111 == 7:
+                if code_match(person_zy, "532211") == 1:
+                    dict['code'] = "A111={},'532211'={}".format(A111, moneySum(person_zy, "532211"))
+                    dict['核实内容'] = "A111=4、5、7，为何有个人缴纳的医疗保险支出，请查改"
+                    insert_to_pd(dict)
+
+            if A111 == 7 and code_match(person_zy, "240511") == 1:
+                dict['code'] = "A111={},'240511'={}".format(A111, moneySum(person_zy, "240511"))
+                dict['核实内容'] = "此人A111=7,为何有报销医疗费用收入,请查改！"
+                insert_to_pd(dict)
+
+            if A205 == 2 or A205 == 3 or A205 == 4:
+                if code_match(person_zy, "210111") == 1 and moneySum(person_zy, "210111") < 2300:
+                    dict['code'] = "A205={},'210111'={}".format(A205, moneySum(person_zy, "210111"))
+                    dict['核实内容'] = "A205为公职、事业、国企员工，按月发放的工资低于2300元，请核实！"
+                    insert_to_pd(dict)
+
+            if 1 <= A_member['A108'] <= 7 or A_member['A109'] != 1:
+                if code_match(person_zy, "533111") == 1:
+                    dict['code'] = "A108={},A109={},'533111'={}".format(A_member['A108'], A_member['A109'],
+                                                                        moneySum(person_zy, "533111"))
+                    dict['核实内容'] = "A卷该人身份（a108、a109）与记账代码533111不符，请核实！"
+                    insert_to_pd(dict)
+
+            if (1 <= A_member['A108'] <= 7 or A_member['A109'] != '2') and code_match(person_zy, "533211") == 1:
+                dict['code'] = "A108={},A109={},'12'={}".format(A_member['A108'], A_member['A109'],
+                                                                moneySum(person_zy, "533211"))
+                dict['核实内容'] = "A卷该人身份（a108、a109）与记账代码533211不符。请核实！"
+                insert_to_pd(dict)
+
+            if A205 != 1 and A_member['A100'] == "77":
+                dict['code'] = "A205={},A100={},".format(A205, A_member['A100'])
+                dict['核实内容'] = "月度记账人代码77，发生非农经营收入的人应为雇主（a205=1）"
+                insert_to_pd(dict)
+
+            if A204 == 2 or pd.isnull(A_member['A204']) == True:
+                if code_match(person_zy, "531111") == 1 or code_match(person_zy, "532311") == 1 or code_match( \
+                        person_zy, "532411") == 1 or code_match(person_zy, "532911") == 1:
+                    dict['code'] = "A204={},'12'={}".format(A204, moneySum(person_zy, "531111"),
+                                                            moneySum(person_zy, '532311'),
+                                                            moneySum(person_zy, '532411'),
+                                                            moneySum(person_zy, '532911'))
+                    dict['核实内容'] = "本季度未从业过（A204），为何发生个税和社会保障支出？请核实并注明原因"
+                    insert_to_pd(dict)
+
+            if A202 != 3 and code_match(person_zy, "240121") == 1:
+                dict['code'] = "A202={},'240121'={}".format(A202, moneySum(person_zy, '240121'))
+                dict['核实内容'] = "该人为城乡居保收入（240121），为何A202不等于3？请核实并注明原因！"
+                insert_to_pd(dict)
+
+            if code_match(person_zy, "210291") == 1:
+                dict['code'] = "'210291'={}".format(moneySum(person_zy, '210291'))
+                dict['核实内容'] = "确有其他劳动所得？请核实并注明具体情况"
+                insert_to_pd(dict)
+
+            if code_match(person_zy, "230911") == 1:
+                dict['code'] = "'230911'={}".format(moneySum(person_zy, '230911'))
+                dict['核实内容'] = "确有其他财产性收入？请注明具体收入内容"
+                insert_to_pd(dict)
+
+            if code_match(person_zy, "240891") == 1:
+                dict['code'] = "'240891'={}".format(moneySum(person_zy, '240891'))
+                dict['核实内容'] = "确有其他转移性收入？请注明具体收入内容"
+                insert_to_pd(dict)
+
+            m1 = moneySum(person_zy, "539111")
+            m2 = moneySum(person_zy, "539211")
+            m3 = moneySum(person_zy, "539911")
+            if m1 > 500 or m2 > 500 or m3 > 500:
+                dict['code'] = "'539111'={},'539211'={},'539911'={}".format(m1, m2, m3)
+                dict['核实内容'] = "确有较大金额的其他经常转移支出？(539***)请核实并注明具体支出内容"
+                insert_to_pd(dict)
+
+            if code_match(person_zy, "522111") == 1:
+                dict['code'] = "'522111'={}".format(moneySum(person_zy, '522111'))
+                dict['核实内容'] = "确有其他财产性支出？请注明具体支出内容"
+                insert_to_pd(dict)
+
+            for row in person_zy.iterrows():
+                person_row = row[1]
+                c = int(person_row['CODE'])
+                money = float(person_row['MONEY'])
+                if 561011 >= c >= 111011 and c != 260111 and c != 560111:
+                    if c > 399999 or c < 300000:
+                        if money > 50000:
+                            dict['code'] = "code={}，money={}".format(c, money)
+                            dict['核实内容'] = "单笔5万元以上的大额数据，请核实并注明情况！"
+                        else:
+                            if money > 20000:
+                                dict['code'] = "code={},money={}".format(c, money)
+                                dict['核实内容'] = "单笔2万元以上的大额数据，请核实并注明情况！"
+                                insert_to_pd(dict)
+
+                if person_row['note4'] == 0 and (pd.isnull(person_row['CODE']) == True or c == 0):
+                    dict['code'] = "code={},note4={}".format(c, person_row['note4'])
+                    dict['核实内容'] = "此条账页的编码（code）,不在标准编码库中，漏填？编码错？导入导出错？请核实！"
+                    insert_to_pd(dict)
+
+                if person_row['markyc'] == 2:
+                    dict['code'] = "code={},markyc={}".format(c, person_row['markyc'])
+                    dict['核实内容'] = "此条账页的编码（code）为异常编码（这些编码上海应不存在），确有？编码错？导入导出错？请核实！"
+                    insert_to_pd(dict)
+
+                if c != 641111 and c != 651111:
+                    if person_row['note11'] == 1 and person_row['AMOUNT'] == 0:
+                        dict['code'] = "code={},note11={},amount={}".format(c, person_row['note11'],
+                                                                            person_row['AMOUNT'])
+                        dict['核实内容'] = "此条账页应有数据，却漏填数据。请核实！"
+                        insert_to_pd(dict)
+                    if person_row['note22'] == 1 and person_row['MONEY'] == 0:
+                        dict['code'] = "code={},note22={},money={}".format(c, person_row['note22'], person_row['MONEY'])
+                        dict['核实内容'] = "此条账页应填金额，却漏填金额。请核实！"
+                        insert_to_pd(dict)
+
+                if person_row['note11'] == 0 and person_row['AMOUNT'] != 0:
+                    dict['code'] = "code={},note11={},amount={}".format(c, person_row['note11'], person_row['AMOUNT'])
+                    dict['核实内容'] = "此条账页不应填数据，却填了数据。请核实！"
+                    insert_to_pd(dict)
+
+                if person_row['note22'] == 0 and person_row['MONEY'] != 0:
+                    dict['code'] = "code={},note22={},money={}".format(c, person_row['note22'], person_row['MONEY'])
+                    dict['核实内容'] = "此条账页不应填金额，却填了金额。请核实！"
+                    insert_to_pd(dict)
+
+                if person_row['note33'] == 1 and person_row['note4'] == 1:
+                    dict['code'] = "code={},note33={},note4={}".format(c, person_row['note33'], person_row['note4'])
+                    dict['核实内容'] = "此条账页应填note4，但是漏填note4内容。请核实！"
+                    insert_to_pd(dict)
+
+                if person_row['note33'] == 0 and person_row['note4'] != 1:
+                    dict['code'] = "code={},note33={},note4={}".format(c, person_row['note33'], person_row['note4'])
+                    dict['核实内容'] = "此条账页不应填note4，却填了note4内容。请核实！"
+                    insert_to_pd(dict)
+
+                p = int(person_row['PERSON'])
+                if p < 1 or p > 20 and person_row['note44'] == 1:
+                    dict['code'] = "code={},person={},note44={}".format(c, p, person_row['note44'])
+                    dict['核实内容'] = "此条账页应填人代码却漏填或填错。请核实！"
+                    insert_to_pd(dict)
+
+                # if c != 0 and person_row['note44'] == 0 and p != 99:
+                #     t = code_match(person_row, "3") + code_match(person_row, "52") + code_match(person_row, "54") + code_match(person_row,"55") + \
+                #         code_match(person_row, "56") + code_match(person_row, "534111") + code_match(person_row, "539") + code_match(person_row, "23") \
+                #         + code_match(person_row, "2402") + code_match(person_row, "2403") + code_match(person_row,"2404") + code_match(person_row,"240711") + \
+                #         code_match(person_row, "25") + code_match(person_row, "26") + code_match(person_row, "240821") + code_match(person_row, "240831") + \
+                #         code_match(person_row, "240841") + code_match(person_row, "240851") + code_match(person_row,"240861") + code_match(index, "240891")
+                #     if t > 0:
+                #         print("此条账页人代码应为99，却填为其他值。请核实！")
+
+            m1 = moneySum(person_zy, "240611")
+            m2 = moneySum(person_zy, "21")
+            if m1 > 0 and m2 > 0:
+                dict['code'] = "'240611'={},'21'={}".format(m1, m2)
+                dict['核实内容'] = "此人既有工资性收入又有寄带回收入。请核实！"
+                insert_to_pd(dict)
+
+            m1 = moneySum(person_zy, "260111")
+            m2 = moneySum(person_zy, "230111")
+            if m1 >= 10000 and m2 == 0:
+                dict['code'] = "'260111'={},'230111'={}".format(m1, m2)
+                dict['核实内容'] = "提取储蓄款万元以上，应有利息收入。请核实！"
+                insert_to_pd(dict)
+
+            if code_match(person_zy, "240131") == 1:
+                dict['code'] = "'240131'={}".format(moneySum(person_zy, "240131"))
+                dict['核实内容'] = "城乡养老保险已经合并成城乡居保，为何发生新型农村社会养老保险收入（240131）请核实！"
+                insert_to_pd(dict)
+
+            num = num_same_zy(person_zy, "532111")
+            if num > 1:
+                dict['code'] = "'532111'共有{}笔，合计{}".format(num, moneySum(person_zy, '532111'))
+                dict['核实内容'] = "同一人单月个人缴纳的社会保险支出（532111)出现多笔相同金额账页数据"
+                insert_to_pd(dict)
+
+            num = num_same_zy(person_zy, "532211")
+            if num > 1:
+                dict['code'] = "'532211'共有{}笔,合计{}".format(num, moneySum(person_zy, '532211'))
+                dict['核实内容'] = "同一人单月个人缴纳的社会保险支出（532211)出现多笔相同金额账页数据"
+                insert_to_pd(dict)
+
+            num = num_same_zy(person_zy, "532311")
+            if num > 1:
+                dict['code'] = "'532311'共有{}笔,合计{}".format(num, moneySum(person_zy, '532311'))
+                # print("同一个人单月缴纳的社会保障支出出现多笔账页数据？请核实并注明原因")
+                dict['核实内容'] = "同一人单月个人缴纳的社会保险支出（532311)出现多笔相同金额账页数据"
+                insert_to_pd(dict)
+
+            num = num_same_zy(person_zy, "532411")
+            if num > 1:
+                dict['code'] = "'532411'共有{}笔,合计{}".format(num, moneySum(person_zy, '532411'))
+                # print("同一个人单月缴纳的社会保障支出出现多笔账页数据？请核实并注明原因")
+                dict['核实内容'] = "同一人单月个人缴纳的社会保险支出（532411)出现多笔相同金额账页数据"
+                insert_to_pd(dict)
+
+            # qd 月度数据
+            # if Table(one_zhuhu,"M217") == 1:
+            #     print("该户账页数据没有录入。")
+
+            # A问卷
+            if Table(one_zhuhu, "M217") == 1 and A201 != 3 and A202 == 6:
+                dict['code'] = "M217={},A201={},A202={}".format(Table(one_zhuhu, "m217"), A201, A202)
+                dict['核实内容'] = "单位离退休人员，为何没有参加任何养老保险A202=6，请核实并注明！"
+                insert_to_pd(dict)
+
+            if A_member['A108'] == 6:
+                dict['code'] = "A108={}".format(A_member['A108'])
+                dict['核实内容'] = "A108=6,户口登记地在省外，应直接填写省代码！"
+                insert_to_pd(dict)
+
+            if A_member['A108'] == 7:
+                dict['code'] = "A108={}".format(A_member['A108'])
+                dict['核实内容'] = "A108=7,户口登记地为其他？请核实！"
+                insert_to_pd(dict)
+            # print(type(A_member['A111']),A_member['A202'])
+            a1 = A_member['A111']
+            a2 = A_member['A202']
+            # pk1 = (a1 == 1) and (a2 != 1)
+            # pk2 = (a1 == 2) and (a2 != 2)
+            # pk3 = (a1 == 3) and (a2 != 3)
+            pk4 = (a1 != 1) and (a2 == 1)
+            pk5 = (a1 != 2) and (a2 == 2)
+            pk6 = (a1 != 3) and (a2 == 3)
+            pk7 = (a1 != 5) and (a2 == 4)
+            pk8 = (a1 != 6) and (a2 == 5)
+            if pk4 or pk5 or pk6 or pk7 or pk8:
+                dict['code'] = "A111={},A202={}".format(A111, A202)
+                dict['核实内容'] = "A111医疗保险种类与A202养老保险不一致，请核实！"
+                insert_to_pd(dict)
+
+            if A_member['A106'] >= 16 and A_member['A112'] == 3 and A_member['A203'] == 2 and A111 == 4:
+                dict['code'] = "A106={},A112={},A203={},A111={}".format(A_member['A106'], A_member['A112'],
+                                                                        A_member['A203'], A111)
+                dict['核实内容'] = "A111确实是公费医疗？请核实并注明具体情况!"
+                insert_to_pd(dict)
+
+            if len(str(A_member['A108'])) > 1 and A_member['A204'] == 1:
+                if A_member['A111'] == 7:
+                    dict['code'] = "A108={},A204={},A111={}".format(A_member['A108'], A204, A111)
+                    dict['核实内容'] = "外来务工人员，未参加任何医疗保险A111=7，请核实并注明具体情况!"
+                    insert_to_pd(dict)
+
+                if A202 == 6:
+                    dict['code'] = "A108={},A202={}，A204={}".format(A_member['A108'], A202, A204)
+                    dict['核实内容'] = "外来务工人员，未参加任何养老保险A202=6，请核实并注明具体情况！"
+                    insert_to_pd(dict)
+
+            if A204 == 1 and A205 == 6 and A208 > 0:
+                m = moneySum(person_zy, "12")
+                if m == 0:
+                    dict['code'] = "A204={},A205={},A208={},'12'={}".format(A204, A205, A208, m)
+                    dict['核实内容'] = "此人漏填农业自营收入（编码12打头）。请核实！"
+                    insert_to_pd(dict)
+
+        # 审核家庭账页
+        dict['name'] = huzhu
+        dict['person'] = str(99)
+        # print(dict['person'],huzhu)
         if Table(one_zhuhu,'M211') != 1:
             money = moneySum(zy_family,"12")
             if money > 0:
@@ -142,7 +587,7 @@ def independent_check(tableA,tableB,zy,zhuhu,xiaoqu,codes,result_table):
 
         if Table(one_zhuhu, "M216") == 2:
             renkou = sum_people(A)
-            print(family_sid,renkou)
+            # print(family_sid,renkou)
             money = moneySum(zy_family, "3")
             if renkou > 0:
                 if money / renkou < 300:
@@ -200,432 +645,10 @@ def independent_check(tableA,tableB,zy,zhuhu,xiaoqu,codes,result_table):
                 dict['核实内容'] = "该户为低保户（M216），为何没有低保收入（2402111）？请核实并注明原因！"
                 insert_to_pd(dict)
 
-        #zycheck about tableA and zy
-        # if Table(one_zhuhu,'M217') == 1:
-        for rowA in A.iterrows():
-            A_member = rowA[1]
-            person = A_member['A100']
-            person_zy = zy_family[zy_family['PERSON'] == str(person)]
-            # print(person_zy)
-            dict['person'] = str(person)
-            dict['name'] = A_member['A101']
-
-            # 审核要求教育相关
-            age = int(year) - int(A_member['A105_1'])
-            money3611 = moneySum(zy_family,'3611')
-            A112 = A_member['A112']
-            A113 = A_member['A113']
-            if money3611 != 0 and age < 12:
-                if A112 != 1 or A113 != 1:
-                    dict['code'] = "'3611'={},A112={},A113={}".format(money3611,A112,A113)
-                    dict['核实内容'] = "有3611学前教育费用，A112应为1，A113应为1，是否填错或漏填？请核实!"
-                    insert_to_pd(dict)
-
-            money3612 = moneySum(zy_family,'3612')
-            if money3612 != 0 and age < 12:
-                if A112 != 1 or A113 != 2:
-                    dict['code'] = "'3612'={},A112={},A113={}".format(money3612,A112,A113)
-                    dict['核实内容'] = "有3612小学教育费用，A112应为1，A113应为2，是否填错或漏填？请核实!"
-                    insert_to_pd(dict)
-            money3613 = moneySum(zy_family,'3613')
-            if money3612 != 0 and age < 12:
-                if A112 != 1 or A113 != 3:
-                    dict['code'] = "'3613'={},A112={},A113={}".format(money3613,A112,A113)
-                    dict['核实内容'] = "有3613小学教育费用，A112应为1，A113应为3，是否填错或漏填？请核实!"
-                    insert_to_pd(dict)
-            money3614 = moneySum(zy_family,'3614')
-            if money3612 != 0 and age < 12:
-                if A112 != 1 or A113 != 4:
-                    dict['code'] = "'3614'={},A112={},A113={}".format(money3614,A112,A113)
-                    dict['核实内容'] = "有3614小学教育费用，A112应为1，A113应为4，是否填错或漏填？请核实!"
-                    insert_to_pd(dict)
-            money3615 = moneySum(zy_family,'3615')
-            if money3615 != 0 and age < 12:
-                if A112 != 1 or A113 != 2:
-                    dict['code'] = "'3612'={},A112={},A113={}".format(money3612,A112,A113)
-                    dict['核实内容'] = "有3615小学教育费用，A112应为1，A113应为5，是否填错或漏填？请核实!"
-                    insert_to_pd(dict)
-            money3616 = moneySum(zy_family,'3616')
-            if money3616 != 0 and age < 12:
-                if A112 != 1 or A113 != 2:
-                    dict['code'] = "'3616'={},A112={},A113={}".format(money3612,A112,A113)
-                    dict['核实内容'] = "有3616小学教育费用，A112应为1，A113应为6，是否填错或漏填？请核实!"
-                    insert_to_pd(dict)
-
-            # print(type(A_member['A204']))
-            A204 = A_member['A204']
-            A205 = A_member['A205']
-            A208 = A_member['A208']
-            m1 = moneySum(person_zy, "12")
-            m2 = moneySum(person_zy, "2101")
-            m3 = moneySum(person_zy, "22")
-            if A205 == 1 and A204 == 1 and A208 != 0:
-                if m1 + m2 + m3 == 0:
-                    dict['code'] = "A205={},A204={},A208={},'12'={},'2101'={},'22'={}".format(A205,A204,A208,m1,m2,m3)
-                    dict['核实内容'] = "雇主漏填收入，请核实！"
-                    insert_to_pd(dict)
-
-            if A204 == 1 and 2 <= A205 <= 5 and A208 != 0:
-                m4 = moneySum(person_zy, "210221")
-                if m2 + m4 == 0:
-                    dict['code'] = "A204={},A205={},A208={},'210221'={},'2101'={}".format(A204,A205, A208,m4,m2)
-                    dict['核实内容'] = "此人漏填工资性收入，请核实！"
-                    insert_to_pd(dict)
-
-            if A204 != 1 or (A205 < 2 or A205 > 5) or A208 == 0:
-                if m2 != 0:
-                    dict['code'] = "A204={},A205={},A208={},'2101'={}".format(A204,A205,A208,m2)
-                    dict['核实内容'] = "多填工资性收入，请核实！"
-                    insert_to_pd(dict)
-
-            if A_member['A204'] == 1 and A_member['A205'] == 7 and A_member['A208'] != 0:
-                if m3 == 0:
-                    dict['code'] = "A204={},A205={},A208={},'22'={}".format(A204, A205, A208, m3)
-                    dict['核实内容'] = "漏填非农自营收入，请核实！"
-                    insert_to_pd(dict)
-
-            if A_member['A204'] != 1 or A_member['A205'] != 7 or A_member['A208'] == 0:
-                if m3 != 0:
-                    dict['code'] = "A204={},A205={},A208={},'2101'={}".format(A204, A205, A208, m3)
-                    dict['核实内容'] = "多填非农自营收入，请核实！"
-                    insert_to_pd(dict)
-
-            if A_member['A206'] != 12:
-                if code_match(person_zy, "220911") == 1:
-                    dict['code'] = "A206={},'220911'={}".format(A_member['A206'],moneySum(person_zy,'220911'))
-                    dict['核实内容'] = "确有租赁和商务服务收入？请核实并注明具体收入内容！"
-                    insert_to_pd(dict)
-
-            A201 = A_member['A201']
-            A202 = A_member['A202']
-            m1 = moneySum(person_zy,"2401")
-            m11 = moneySum(person_zy,"240111")
-            m21 = moneySum(person_zy,"240121")
-            m91 = moneySum(person_zy, "240191")
-            if A201 == 1 or A201 == 2:
-                if A202 == 2 and code_match(person_zy, "2401") == 1 and code_match(person_zy,"240111") != 1:
-                    dict['code'] = "A201={},A202={},'2401'={},'240111'={}".format(A201,A202,m1,m11)
-                    dict['核实内容'] = "参加城镇职工养老保险，记账代码应填240111，请核实A202或编码是否正确。"
-                    insert_to_pd(dict)
-
-                if A202 == 4 or A202 == 5 and code_match(person_zy, "2401") == 1 and code_match(person_zy, "240191") != 1:
-                    dict['code'] = "A201={},A202={},'2401'={},'240191'={}".format(A201, A202, m1,m91)
-                    dict['核实内容'] = "参加其他养老保险，记账代码应填240191，请核实A202或编码是否正确。"
-                    insert_to_pd(dict)
-
-            if A201 == 3 and A_member['A106'] >= 60:
-                if A202 == 3 and code_match(person_zy, "2401") == 1 and code_match(person_zy,"240121") != 1:
-                    dict['code'] = "A201={},A202={},'2401'={},'240121'={}".format(A201,A202,m1,m21)
-                    dict['核实内容'] = "参加城镇居民养老保险，记账代码应填240121，请核实A202或编码是否正确。"
-                    insert_to_pd(dict)
-            if code_match(person_zy,'240191'):
-                dict['code'] = "'240191'={}".format(m91)
-                dict['核实内容'] = "有其他养老金？请核实"
-                insert_to_pd(dict)
-            if code_match(person_zy, "240111") == 1:
-                if A201 == 3 and A202 != 3 and A202 != 4 and A202 != 5:
-                    dict['code'] = "A201={},A202={},'240111'={}".format(A201, A202, m11,)
-                    dict['核实内容'] = "A201=3，为何有A202（4、5）之外的养老金收入？请核实!"
-                    insert_to_pd(dict)
-
-            if A_member['A106'] >= 60 and A202 != 6 and A202 != 0 and A204 == 2:
-                if moneySum(person_zy, "2401") == 0:
-                    dict['code'] = "A106={},A202={},A204={},'2401'={}".format(A_member['A106'], A202,A204, m1)
-                    dict['核实内容'] = "60岁以上为工作参保人员，没有任何养老金收入？请核实！"
-                    insert_to_pd(dict)
-
-            if (A201 == 1 or A201 == 2) and A202 != 4 and A202 != 5:
-                if code_match(person_zy,"240191") == 1:
-                    dict['code'] = "A201={},A202={},'240191'={}".format(A201, A202, m91)
-                    dict['核实内容'] = "A202≠4,5，为何有其他养老保险收入，请核实！"
-                    insert_to_pd(dict)
-                    # dict['核实内容'] =("此人为退休者、A202里面没有4或5，为何有其他养老保险收入，请核实！")
-
-            if A204 != 2 and code_match(person_zy, "240811") == 1:
-                dict['code'] = "A204={},'240811'={}".format(A204,moneySum(person_zy,"240811"))
-                dict['核实内容'] = "非失业人员，有失业保险金？请核实！"
-                insert_to_pd(dict)
-
-            if A201 == 3 and A204 == 1 and A202 == 2:
-                if moneySum(person_zy, "532111") == 0:
-                    dict['code'] = "A201={},A202={},'532111'={}".format(A201, A202, moneySum(person_zy,"532111"))
-                    dict['核实内容'] = "漏填个人缴纳的养老保险金，请核实！"
-                    insert_to_pd(dict)
-
-            if A202 != 1 and A202 != 5:
-                if code_match(person_zy, "532911") == 1:
-                    dict['code'] = "A202={},'532911'={}".format( A202,moneySum(person_zy,"532911"))
-                    dict['核实内容'] = "非农保镇保人员，为何有其他社保支出？请注明具体支出内容！"
-                    insert_to_pd(dict)
-
-            if A205 != 7:
-                if code_match(person_zy, "5513") == 1 or code_match(person_zy, "5514") == 1:
-                    dict['code'] = "A205={},'5513'={},'5514'={}".format(A205,moneySum(person_zy,"5513"),moneySum(person_zy,'5514'))
-                    dict['核实内容'] = "不是非农自营对象，为何有生产性固定资产支出？请核实并注明具体情况！"
-                    insert_to_pd(dict)
-
-            # 多填农业自营收入（12 - --15）
-
-            if A202 == 4 or A202 == 6:
-                if code_match(person_zy, "532111") == 1:
-                    dict['code'] = "A202={},'532111'={}".format(A202,moneySum(person_zy,"532111"))
-                    dict['核实内容'] = "A202=4、6，为何有个人缴纳的养老保险支出，请查改！"
-                    insert_to_pd(dict)
-
-            A111 = A_member['A111']
-            if A111 == 4 or A111 == 5 or A111 == 7:
-                if code_match(person_zy,"532211") == 1:
-                    dict['code'] = "A111={},'532211'={}".format(A111,moneySum(person_zy,"532211"))
-                    dict['核实内容'] = "A111=4、5、7，为何有个人缴纳的医疗保险支出，请查改"
-                    insert_to_pd(dict)
-
-            if A111 == 7 and code_match(person_zy,"240511") == 1:
-                dict['code'] = "A111={},'240511'={}".format(A111,moneySum(person_zy,"240511"))
-                dict['核实内容'] = "此人A111=7,为何有报销医疗费用收入,请查改！"
-                insert_to_pd(dict)
-
-            if A205 == 2 or A205 == 3 or A205 == 4:
-                if code_match(person_zy, "210111") == 1 and moneySum(person_zy, "210111") < 2300:
-                    dict['code'] = "A205={},'210111'={}".format(A205,moneySum(person_zy,"210111"))
-                    dict['核实内容'] = "A205为公职、事业、国企员工，按月发放的工资低于2300元，请核实！"
-                    insert_to_pd(dict)
-
-            if 1 <= A_member['A108'] <= 7 or A_member['A109'] != 1:
-                if code_match(person_zy, "533111") == 1:
-                    dict['code'] = "A108={},A109={},'533111'={}".format(A_member['A108'],A_member['A109'],moneySum(person_zy,"533111"))
-                    dict['核实内容'] = "A卷该人身份（a108、a109）与记账代码533111不符，请核实！"
-                    insert_to_pd(dict)
-
-            if (1 <= A_member['A108'] <= 7 or A_member['A109'] != '2') and code_match(person_zy, "533211") == 1:
-                dict['code'] = "A108={},A109={},'12'={}".format(A_member['A108'],A_member['A109'],moneySum(person_zy,"533211"))
-                dict['核实内容'] = "A卷该人身份（a108、a109）与记账代码533211不符。请核实！"
-                insert_to_pd(dict)
-
-            if A205 != 1 and A_member['A100'] == "77":
-                dict['code'] = "A205={},A100={},".format(A205,A_member['A100'])
-                dict['核实内容'] = "月度记账人代码77，发生非农经营收入的人应为雇主（a205=1）"
-                insert_to_pd(dict)
-
-            if A204 == 2 or pd.isnull(A_member['A204']) == True:
-                if code_match(person_zy, "531111") == 1 or code_match(person_zy, "532311") == 1 or code_match(\
-                        person_zy, "532411") == 1 or code_match(person_zy, "532911") == 1:
-                    dict['code'] = "A204={},'12'={}".format(A204,moneySum(person_zy,"531111"),moneySum(person_zy,'532311'),moneySum(person_zy,'532411'),moneySum(person_zy,'532911'))
-                    dict['核实内容'] = "本季度未从业过（A204），为何发生个税和社会保障支出？请核实并注明原因"
-                    insert_to_pd(dict)
-
-            if A202 != 3 and code_match(person_zy, "240121") == 1:
-                dict['code'] = "A202={},'240121'={}".format(A202,moneySum(person_zy,'240121'))
-                dict['核实内容'] = "该人为城乡居保收入（240121），为何A202不等于3？请核实并注明原因！"
-                insert_to_pd(dict)
-
-            if code_match(person_zy, "210291") == 1:
-                dict['code'] = "'210291'={}".format(moneySum(person_zy,'210291'))
-                dict['核实内容'] = "确有其他劳动所得？请核实并注明具体情况"
-                insert_to_pd(dict)
-
-            if code_match(person_zy, "230911") == 1:
-                dict['code'] = "'230911'={}".format(moneySum(person_zy, '230911'))
-                dict['核实内容'] = "确有其他财产性收入？请注明具体收入内容"
-                insert_to_pd(dict)
-
-            if code_match(person_zy, "240891") == 1:
-                dict['code'] = "'240891'={}".format(moneySum(person_zy, '240891'))
-                dict['核实内容'] = "确有其他转移性收入？请注明具体收入内容"
-                insert_to_pd(dict)
-
-            m1 = moneySum(person_zy, "539111")
-            m2 = moneySum(person_zy, "539211")
-            m3 = moneySum(person_zy,"539911")
-            if m1 > 500 or m2 > 500 or m3 > 500:
-                dict['code'] = "'539111'={},'539211'={},'539911'={}".format(m1,m2,m3)
-                dict['核实内容'] = "确有较大金额的其他经常转移支出？(539***)请核实并注明具体支出内容"
-                insert_to_pd(dict)
-
-            if code_match(person_zy, "522111") == 1:
-                dict['code'] = "'522111'={}".format(moneySum(person_zy, '522111'))
-                dict['核实内容'] = "确有其他财产性支出？请注明具体支出内容"
-                insert_to_pd(dict)
-
-            for row in person_zy.iterrows():
-                person_row = row[1]
-                c = int(person_row['CODE'])
-                money = float(person_row['MONEY'])
-                if 561011 >= c >= 111011 and c != 260111 and c != 560111:
-                    if c > 399999 or c < 300000:
-                        if money > 50000:
-                            dict['code'] = "code={}，money={}".format(c,money)
-                            dict['核实内容'] = "单笔5万元以上的大额数据，请核实并注明情况！"
-                        else:
-                            if money > 20000:
-                                dict['code'] = "code={},money={}".format(c,money)
-                                dict['核实内容'] = "单笔2万元以上的大额数据，请核实并注明情况！"
-                                insert_to_pd(dict)
-
-                if person_row['note4'] == 0 and (pd.isnull(person_row['CODE']) == True or c == 0):
-                    dict['code'] = "code={},note4={}".format(c,person_row['note4'])
-                    dict['核实内容'] = "此条账页的编码（code）,不在标准编码库中，漏填？编码错？导入导出错？请核实！"
-                    insert_to_pd(dict)
-
-                if person_row['markyc'] == 2:
-                    dict['code'] = "code={},markyc={}".format(c,person_row['markyc'])
-                    dict['核实内容'] = "此条账页的编码（code）为异常编码（这些编码上海应不存在），确有？编码错？导入导出错？请核实！"
-                    insert_to_pd(dict)
-
-                if c != 641111 and c != 651111:
-                    if person_row['note11'] == 1 and person_row['AMOUNT'] == 0:
-                        dict['code'] = "code={},note11={},amount={}".format(c,person_row['note11'],person_row['AMOUNT'])
-                        dict['核实内容'] = "此条账页应有数据，却漏填数据。请核实！"
-                        insert_to_pd(dict)
-                    if person_row['note22'] == 1 and person_row['MONEY'] == 0:
-                        dict['code'] = "code={},note22={},money={}".format(c, person_row['note22'],person_row['MONEY'])
-                        dict['核实内容'] = "此条账页应填金额，却漏填金额。请核实！"
-                        insert_to_pd(dict)
-
-                if person_row['note11'] == 0 and person_row['AMOUNT'] != 0:
-                    dict['code'] = "code={},note11={},amount={}".format(c, person_row['note11'], person_row['AMOUNT'])
-                    dict['核实内容'] = "此条账页不应填数据，却填了数据。请核实！"
-                    insert_to_pd(dict)
-
-                if person_row['note22'] == 0 and person_row['MONEY'] != 0:
-                    dict['code'] = "code={},note22={},money={}".format(c, person_row['note22'], person_row['MONEY'])
-                    dict['核实内容'] = "此条账页不应填金额，却填了金额。请核实！"
-                    insert_to_pd(dict)
-
-                if person_row['note33'] == 1 and person_row['note4'] == 1:
-                    dict['code'] = "code={},note33={},note4={}".format(c, person_row['note33'], person_row['note4'])
-                    dict['核实内容'] = "此条账页应填note4，但是漏填note4内容。请核实！"
-                    insert_to_pd(dict)
-
-                if person_row['note33'] == 0 and person_row['note4'] != 1:
-                    dict['code'] = "code={},note33={},note4={}".format(c, person_row['note33'], person_row['note4'])
-                    dict['核实内容'] = "此条账页不应填note4，却填了note4内容。请核实！"
-                    insert_to_pd(dict)
-
-                p = int(person_row['PERSON'])
-                if p < 1 or p > 20 and person_row['note44'] == 1:
-                    dict['code'] = "code={},person={},note44={}".format(c, p,person_row['note44'])
-                    dict['核实内容'] = "此条账页应填人代码却漏填或填错。请核实！"
-                    insert_to_pd(dict)
-
-                # if c != 0 and person_row['note44'] == 0 and p != 99:
-                #     t = code_match(person_row, "3") + code_match(person_row, "52") + code_match(person_row, "54") + code_match(person_row,"55") + \
-                #         code_match(person_row, "56") + code_match(person_row, "534111") + code_match(person_row, "539") + code_match(person_row, "23") \
-                #         + code_match(person_row, "2402") + code_match(person_row, "2403") + code_match(person_row,"2404") + code_match(person_row,"240711") + \
-                #         code_match(person_row, "25") + code_match(person_row, "26") + code_match(person_row, "240821") + code_match(person_row, "240831") + \
-                #         code_match(person_row, "240841") + code_match(person_row, "240851") + code_match(person_row,"240861") + code_match(index, "240891")
-                #     if t > 0:
-                #         print("此条账页人代码应为99，却填为其他值。请核实！")
-
-            m1 = moneySum(person_zy, "240611")
-            m2 = moneySum(person_zy, "21")
-            if m1 > 0 and m2 > 0:
-                dict['code'] = "'240611'={},'21'={}".format(m1,m2)
-                dict['核实内容'] = "此人既有工资性收入又有寄带回收入。请核实！"
-                insert_to_pd(dict)
-
-            m1 = moneySum(person_zy, "260111")
-            m2 = moneySum(person_zy, "230111")
-            if m1 >= 10000 and m2 == 0:
-                dict['code'] = "'260111'={},'230111'={}".format(m1, m2)
-                dict['核实内容'] = "提取储蓄款万元以上，应有利息收入。请核实！"
-                insert_to_pd(dict)
-
-            if code_match(person_zy, "240131") == 1:
-                dict['code'] = "'240131'={}".format(moneySum(person_zy,"240131"))
-                dict['核实内容'] = "城乡养老保险已经合并成城乡居保，为何发生新型农村社会养老保险收入（240131）请核实！"
-                insert_to_pd(dict)
-
-            num = num_same_zy(person_zy, "532111")
-            if num > 1:
-                dict['code'] = "'532111'共有{}笔，合计{}".format(num,moneySum(person_zy,'532111'))
-                dict['核实内容'] = "同一人单月个人缴纳的社会保险支出（532111)出现多笔相同金额账页数据"
-                insert_to_pd(dict)
-
-            num = num_same_zy(person_zy, "532211")
-            if num > 1:
-                dict['code'] = "'532211'共有{}笔,合计{}".format(num,moneySum(person_zy, '532211'))
-                dict['核实内容'] = "同一人单月个人缴纳的社会保险支出（532211)出现多笔相同金额账页数据"
-                insert_to_pd(dict)
-
-            num = num_same_zy(person_zy, "532311")
-            if num > 1:
-                dict['code'] = "'532311'共有{}笔,合计{}".format(num,moneySum(person_zy, '532311'))
-                # print("同一个人单月缴纳的社会保障支出出现多笔账页数据？请核实并注明原因")
-                dict['核实内容'] = "同一人单月个人缴纳的社会保险支出（532311)出现多笔相同金额账页数据"
-                insert_to_pd(dict)
-
-            num = num_same_zy(person_zy, "532411")
-            if num > 1:
-                dict['code'] = "'532411'共有{}笔,合计{}".format(num,moneySum(person_zy, '532411'))
-                # print("同一个人单月缴纳的社会保障支出出现多笔账页数据？请核实并注明原因")
-                dict['核实内容'] = "同一人单月个人缴纳的社会保险支出（532411)出现多笔相同金额账页数据"
-                insert_to_pd(dict)
-
-            #qd 月度数据
-            # if Table(one_zhuhu,"M217") == 1:
-            #     print("该户账页数据没有录入。")
-
-
-            # A问卷
-            if Table(one_zhuhu,"M217") == 1 and A201 != 3 and A202 == 6:
-                dict['code'] = "M217={},A201={},A202={}".format(Table(one_zhuhu,"m217"),A201,A202)
-                dict['核实内容'] = "单位离退休人员，为何没有参加任何养老保险A202=6，请核实并注明！"
-                insert_to_pd(dict)
-
-            if A_member['A108'] == 6:
-                dict['code'] = "A108={}".format(A_member['A108'])
-                dict['核实内容'] = "A108=6,户口登记地在省外，应直接填写省代码！"
-                insert_to_pd(dict)
-
-            if A_member['A108'] == 7:
-                dict['code'] = "A108={}".format(A_member['A108'])
-                dict['核实内容'] = "A108=7,户口登记地为其他？请核实！"
-                insert_to_pd(dict)
-            # print(type(A_member['A111']),A_member['A202'])
-            a1 = A_member['A111']
-            a2 = A_member['A202']
-            # pk1 = (a1 == 1) and (a2 != 1)
-            # pk2 = (a1 == 2) and (a2 != 2)
-            # pk3 = (a1 == 3) and (a2 != 3)
-            pk4 = (a1 != 1) and (a2 == 1)
-            pk5 = (a1 != 2) and (a2 == 2)
-            pk6 = (a1 != 3) and (a2 == 3)
-            pk7 = (a1 != 5) and (a2 == 4)
-            pk8 = (a1 != 6) and (a2 == 5)
-            if pk4 or pk5 or pk6 or pk7 or pk8:
-                dict['code'] = "A111={},A202={}".format(A111,A202)
-                dict['核实内容'] = "A111医疗保险种类与A202养老保险不一致，请核实！"
-                insert_to_pd(dict)
-
-            if A_member['A106'] >= 16 and A_member['A112'] == 3 and A_member['A203'] == 2 and A111 == 4:
-                dict['code'] = "A106={},A112={},A203={},A111={}".format(A_member['A106'],A_member['A112'],A_member['A203'],A111)
-                dict['核实内容'] = "A111确实是公费医疗？请核实并注明具体情况!"
-                insert_to_pd(dict)
-
-            if len(str(A_member['A108'])) > 1 and A_member['A204'] == 1:
-                if A_member['A111'] == 7:
-                    dict['code'] = "A108={},A204={},A111={}".format(A_member['A108'],A204,A111)
-                    dict['核实内容'] = "外来务工人员，未参加任何医疗保险A111=7，请核实并注明具体情况!"
-                    insert_to_pd(dict)
-
-                if A202 == 6:
-                    dict['code'] = "A108={},A202={}，A204={}".format(A_member['A108'],A202,A204)
-                    dict['核实内容'] = "外来务工人员，未参加任何养老保险A202=6，请核实并注明具体情况！"
-                    insert_to_pd(dict)
-
-            if A204 == 1 and A205 == 6 and A208 > 0:
-                m = moneySum(person_zy, "12")
-                if m == 0:
-                    dict['code'] = "A204={},A205={},A208={},'12'={}".format(A204,A205,A208,m)
-                    dict['核实内容'] = "此人漏填农业自营收入（编码12打头）。请核实！"
-                    insert_to_pd(dict)
 
         #zycheck about tableB and zy
         for rowB in B.iterrows():
             B_family = rowB[1]
-            # family_SID = B_family['SID']
-            # family_zy = zy_family[zy_family['SID'] == family_SID]
-            # print(person_SID,person)
             B130 = B_family["B130"]
             B133 = B_family['B133']
             if (B130 == 0 or pd.isnull(B130)==True) and (B133 == 0 or pd.isnull(B130)==True) and code_match(zy_family,"2305") == 1:
@@ -742,11 +765,31 @@ def independent_check(tableA,tableB,zy,zhuhu,xiaoqu,codes,result_table):
 
     return zy_independent_result
 
+# # 打开csv文件 返回DataFrame对象
+# def read_csv(path):
+#     with open(path, 'r') as f:
+#         file = pd.read_csv(f, header=0)
+#     return file
 # 打开csv文件 返回DataFrame对象
 def read_csv(path):
     with open(path, 'r') as f:
-        file = pd.read_csv(f, header=0)
-    return file
+        df = pd.read_csv(f, header=0, low_memory=False)
+        col = colUpper(df.columns.values.tolist())
+        df = df.rename(columns=col)
+    return df
+
+
+# 将所有列名换成大写
+def colUpper(col):
+    dict = {}
+    for key in col:
+        #跳过编码表中的录入控制码
+        if key == "note4" or key == "markyc":continue
+        value = key.upper()
+        # print(value)
+        dict[key] = value
+    return dict
+
 
 if __name__ == '__main__':
     A_path = u"D:/研一/审核程序/src/输入文件夹/A310151.18.csv"

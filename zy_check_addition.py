@@ -155,50 +155,50 @@ def zy_check_addition(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
                         sum = judge_moneySum(moneySum(person_zy, "21"))
                         if sum + sum1 + sum2 >= 3:
                             dict['code'] = "ChangH={},'21'={},'2201~2211'={},'24011~24013'={}".format(ChangeH,sum,sum1,sum2)
-                            dict['提示信息'] = "一人有三种及以上收入来源"
+                            dict['核实内容'] = "一人有三种及以上收入来源"
                             insert_to_pd(dict)
                         if sum1 >= 2:
                             dict['code'] = "ChangH={},'2201~2211'={}".format(ChangeH,sum1)
-                            dict['提示信息'] = "一人有两种及以上经营收入"
+                            dict['核实内容'] = "一人有两种及以上经营收入"
                             insert_to_pd(dict)
                         if sum2 >= 2:
                             dict['code'] = "ChangH={},'24011~24013'={}".format(ChangeH, sum2)
-                            dict['提示信息'] = "一人有两种及以上养老收入（不含其他商业保险养老情况）"
+                            dict['核实内容'] = "一人有两种及以上养老收入（不含其他商业保险养老情况）"
                             insert_to_pd(dict)
                         if TaskCode <= 4:
                             m1 = moneySum(person_zy, "210111")
                             if A_member['A204'] == 2 and m1 > 0:
                                 dict['code'] = "ChangH={},TaskCode={},A204={},'210111'={}".format(ChangeH,TaskCode,A_member['A204'],m1)
-                                dict['提示信息'] = "本季度末未就业有按月发放的工资"
+                                dict['核实内容'] = "本季度末未就业有按月发放的工资"
                                 insert_to_pd(dict)
 
                             m2 = moneySum(person_zy, "240111")
                             if A_member['A202'] != 1 and A_member['A201'] == 3 and m2 > 0:
                                 dict['code'] = "ChangH={},TaskCode={},A202={},A201={},'240111'={}".format(ChangeH, TaskCode,A_member['A202'],A_member['A201'], m2)
-                                dict['提示信息'] = "本季度末退休有离退休金"
+                                dict['核实内容'] = "本季度末退休有离退休金"
                                 insert_to_pd(dict)
 
                             m21 = moneySum(person_zy, "21")
                             m22 = moneySum(person_zy, "22")
                             if A_member['A108'] < 1.5 and m21 + m22 > 15000:
                                 dict['code'] = "ChangH={},TaskCode={},A108={},'21'+'22'={}>15000".format(ChangeH, TaskCode,A_member['A108'], m21+m22)
-                                dict['提示信息'] = "本季度工作时间段，但按月收入很高"
+                                dict['核实内容'] = "本季度工作时间段，但按月收入很高"
                                 insert_to_pd(dict)
                             m24 = moneySum(person_zy, "2401")
                             a = A_member['A119']
                             if a == 2 and m21 + m22 + m24 > 0:
                                 dict['code'] = "ChangH={},TaskCode={},A119={},'21'+'22'+'2401'={}".format(ChangeH,TaskCode,a,m21 + m22 +m24)
-                                dict['提示信息'] = "本季度非常住人员有工资性收入、经营性收入和离退休金"
+                                dict['核实内容'] = "本季度非常住人员有工资性收入、经营性收入和离退休金"
                                 insert_to_pd(dict)
                             m = moneySum(person_zy, "2406")
                             if a == 1 and m > 0:
                                 dict['code'] = "ChangH={},TaskCode={},A119={},'2406'={}".format(ChangeH,TaskCode,a,m)
-                                dict['提示信息'] = "本季度常住人员有寄带回收入"
+                                dict['核实内容'] = "本季度常住人员有寄带回收入"
                                 insert_to_pd(dict)
 
                             if a == 2 and m > 12000:
                                 dict['code'] = "ChangH={},TaskCode={},A119={},'2406'={}".format(ChangeH, TaskCode, a, m)
-                                dict['提示信息'] = "本季度非常住人员大量寄带回，请核实"
+                                dict['核实内容'] = "本季度非常住人员大量寄带回，请核实"
                                 insert_to_pd(dict)
 
             # 收入、成本相关
@@ -206,12 +206,12 @@ def zy_check_addition(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
                 money = moneySum(zy_family,"11") + moneySum(zy_family,"12") + moneySum(zy_family,"13") + moneySum(zy_family,"14")
                 if money > 500:
                     dict['code'] = "ChangH={},TaskCode={},M211={},'11’~‘14'={}".format(ChangeH, TaskCode, Table(one_zhuhu,'M211'), money)
-                    dict['提示信息'] = "不是农业经营户有超过500元的农业生产经营账页数据"
+                    dict['核实内容'] = "不是农业经营户有超过500元的农业生产经营账页数据"
                     insert_to_pd(dict)
             mm = moneySum(zy_family, "22") + moneySum(zy_family, "51")
             if ChangeH == 0 and Table(one_zhuhu,'M212') == 2 and mm > 0:
                 dict['code'] = "ChangH={},M212={},'22'+'51'={}".format(ChangeH, Table(one_zhuhu,'M212'), mm)
-                dict['提示信息'] = "不是二三产经营户有二三产经营账页数据"
+                dict['核实内容'] = "不是二三产经营户有二三产经营账页数据"
                 insert_to_pd(dict)
 
 
