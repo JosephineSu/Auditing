@@ -139,7 +139,7 @@ class Ui_zyCheckDialog(object):
         self.buttonBox.setSizePolicy(sizePolicy)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.setCenterButtons(False)
+        # self.buttonBox.setCenterButtons(False)
         self.buttonBox.setObjectName("buttonBox")
         self.horizontalLayout_7.addWidget(self.buttonBox)
         self.verticalLayout_2.addWidget(self.widget_3)

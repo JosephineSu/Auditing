@@ -113,6 +113,7 @@ def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
         qu = xiaoqu[xiaoqu['VID'] == qu_vid]
         townname = qu['TOWNNAME'].values[0]
         vname = qu['VNAME'].values[0]
+        coun = qu['COUN'].values[0]
         # qu = xiaoqu[xiaoqu['vID'] == qu_vid]
         # townname = qu['townName'].values[0]
         # vname = qu['vName'].values[0]
@@ -133,8 +134,8 @@ def zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
 
         openYear = Table(one_zhuhu, 'OPENYEAR')
 
-        dict = {'year': str(Table(zy_family, 'YEAR')), 'month': str(Table(zy_family, 'MONTH')), 'task': str(task), 'scode': scode, 'sid': family_sid,'person':str(99),\
-                'townname':townname,'vname':vname}
+        dict = {'year': str(Table(zy_family, 'YEAR')), 'month': str(Table(zy_family, 'MONTH')), 'task': str(task), 'coun':str(coun), 'scode': scode, 'sid': family_sid,'person':str(99),\
+                'townname':townname,'vname':vname,'核实内容':None}
 
         if pd.isnull(openYear) == False:
             # openYear = int(one_zhuhu["OPENYEAR"].values[0])
@@ -357,10 +358,10 @@ if __name__ == '__main__':
     zhuhu = read_csv(zhuhu_path)
     xiaoqu = read_csv(xiaoqu_path)
 
-    head = {'year': [], 'task': [], 'month': [], 'scode': [], 'sid': [], 'person': [], 'name': [], 'code': [],
-            '核实内容': [], 'townname': [], 'vname': []}  # , 'haddr': []}
+    head = {'year': [], 'task': [], 'month': [], 'coun':[],'scode': [], 'sid': [], 'person': [], 'name': [], 'code': [],
+            '核实内容': [],'核实说明':[], 'townname': [], 'vname': []}  # , 'haddr': []}
     result = pd.DataFrame(head)
-    result = result[['year', 'month', 'task', 'scode', 'sid', 'person', 'name', 'code', '核实内容', 'townname', 'vname']]  # , 'haddr']]
+    result = result[['sid','coun','scode', 'year', 'month', 'task', 'person', 'name', 'code', '核实内容', '核实说明','townname', 'vname']]  # , 'haddr']]
 
     zy_check_suggestion(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result)
     zy_suggestion_result.to_excel('zy_suggestion_result.xlsx',encoding="utf-8",index=False,sheet_name='Sheet')

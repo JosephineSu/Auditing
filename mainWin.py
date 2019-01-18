@@ -57,15 +57,15 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         self.page_break_row = []
 
         #A、B、D审核结果输出表的表头
-        self.A_table_head = {'year':[],'sid':[],'scode':[],'name':[],'code':[],'提示内容':[],'townname':[],'vname':[]}
-        A_head = ['year','sid', 'scode', 'name', 'code', '提示内容', 'townname', 'vname']
+        self.A_table_head = {'year':[],'sid':[],'scode':[],'name':[],'code':[],'核实内容':[],'核实说明':[],'townname':[],'vname':[]}
+        A_head = ['year','sid', 'scode', 'name', 'code', '核实内容','核实说明', 'townname', 'vname']
         self.An_check_result = pd.DataFrame(self.A_table_head)
         self.An_check_result = self.An_check_result[A_head]
         self.As_check_result = pd.DataFrame(self.A_table_head)
         self.As_check_result = self.As_check_result[A_head]
 
-        self.B_table_head = {'year':[], 'sid': [], 'scode': [], 'code': [], '提示内容': [], 'townname': [], 'vname': []}
-        B_head = ['year', 'sid', 'scode', 'code', '提示内容', 'townname', 'vname']
+        self.B_table_head = {'year':[], 'sid': [], 'scode': [], 'code': [], '核实内容': [],'核实说明':[], 'townname': [], 'vname': []}
+        B_head = ['year', 'sid', 'scode', 'code', '核实内容','核实说明', 'townname', 'vname']
         self.Bn_check_result = pd.DataFrame(self.B_table_head)
         self.Bn_check_result = self.Bn_check_result[B_head]
         self.Bs_check_result = pd.DataFrame(self.B_table_head)
@@ -73,8 +73,8 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         self.Bi_check_result = pd.DataFrame(self.B_table_head)
         self.Bi_check_result = self.Bi_check_result[B_head]
 
-        self.zy_table_head = {'year': [], 'task': [], 'month': [], 'scode': [], 'sid': [], 'person': [], 'name': [], 'code': [],'核实内容': [], 'townname': [], 'vname': []}
-        zy_head = ['year', 'month', 'task', 'scode', 'sid', 'person', 'name', 'code', '核实内容', 'townname', 'vname']
+        self.zy_table_head = {'sid': [],'coun':[],'scode': [],'task': [],'year': [], 'month': [], 'person': [], 'name': [], 'code': [],'核实内容': [],'核实说明':[],'townname': [], 'vname': []}
+        zy_head = ['sid', 'coun', 'scode','year', 'month', 'task', 'person', 'name', 'code', '核实内容','核实说明','townname', 'vname']
         self.zs_check_result = pd.DataFrame(self.zy_table_head)
         self.zs_check_result = self.zs_check_result[zy_head]
 
@@ -271,77 +271,98 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
 
     # 打开审核问卷对话框
     def openQuestionCheckDialog(self):
-        from A_necessity_check import A_necessity_check
-        from A_suggestion_check import A_suggestion_check
-        from B_necessity_check import B_necessity_check
-        from B_suggestion_check import B_suggestion_check
-        from B_independent_check import B_independent_check
-        from questionCheckDialog import QuestionCheckDialog
-        qcd = QuestionCheckDialog(self)
-        result = qcd.exec_()
-        An, As, Bn, Bs, Bi,range = qcd.getData()
+        try:
+            from questionCheckDialog import QuestionCheckDialog
+            qcd = QuestionCheckDialog(self)
+            # 获取对话框返回值
+            result = qcd.exec_()
+            if result:
+                from A_necessity_check import A_necessity_check
+                from A_suggestion_check import A_suggestion_check
+                from B_necessity_check import B_necessity_check
+                from B_suggestion_check import B_suggestion_check
+                from B_independent_check import B_independent_check
 
-        if An == True or As == True:
-            if self.A_flag == True and self.xiaoqu_flag == True:
-                if An == True and self.zhuhu_flag == True:
-                    An_outcome = A_necessity_check(self.A,self.zhuhu,self.xiaoqu,self.An_check_result)
-                    # print(type(An_outcome))
-                    Anfilename = 'A_necessity_result.xlsx'
-                    An_outcome.to_excel('./A_necessity_result.xlsx',encoding="utf-8",index=False,sheet_name='Sheet')
-                    self.addToList(Anfilename,An_outcome)
-                    self.showData(An_outcome,100)
+                An, As, Bn, Bs, Bi,range = qcd.getData()
+                # print(An, As, Bn, Bs, Bi)
+                if An + As + Bn + Bs + Bi == 0:
+                    self.statusbar.showMessage("请先选择审核方式")
 
-                if As == True:
-                    As_outcome = A_suggestion_check(self.A,self.xiaoqu,self.As_check_result)
-                    Asfilename = 'A_suggestion_result.xlsx'
-                    As_outcome.to_excel('./A_suggestion_result.xlsx', encoding="utf-8", index=False,sheet_name='Sheet')
-                    self.addToList(Asfilename, As_outcome)
-                    self.showData(As_outcome, 100)
+                if An == True or As == True:
+                    if self.A_flag == True and self.xiaoqu_flag == True:
+                        if An == True and self.zhuhu_flag == True:
+                            self.statusbar.showMessage("正在进行问卷A必要性审核，请稍等...")
+                            An_outcome = A_necessity_check(self.A,self.zhuhu,self.xiaoqu,self.An_check_result)
+                            # print(type(An_outcome))
+                            Anfilename = '问卷A必要性审核结果.xlsx'
+                            An_outcome.to_excel('./问卷A必要性审核结果.xlsx',encoding="utf-8",index=False,sheet_name='Sheet')
+                            self.addToList(Anfilename,An_outcome)
+                            self.showData(An_outcome,100)
+                            self.statusbar.showMessage("审核完毕")
 
-            else:
-                if self.A_flag == False:
-                    self.statusbar.showMessage("请先导入A表")
-                if self.xiaoqu_flag == False:
-                    self.statusbar.showMessage("请先导入小区表")
-                if self.zhuhu_flag == False and An == True:
-                    self.statusbar.showMessage("请先导入住户表")
+                        if As == True:
+                            self.statusbar.showMessage("正在进行问卷A提示性审核，请稍等...")
+                            As_outcome = A_suggestion_check(self.A,self.xiaoqu,self.As_check_result)
+                            Asfilename = '问卷A提示性审核结果.xlsx'
+                            As_outcome.to_excel('./问卷A提示性审核结果.xlsx', encoding="utf-8", index=False,sheet_name='Sheet')
+                            self.addToList(Asfilename, As_outcome)
+                            self.showData(As_outcome, 100)
+                            self.statusbar.showMessage("审核完毕")
 
-        if Bn == True or Bs == True:
-            if self.B_flag == True and self.zhuhu_flag == True and self.zhuzhai_flag == True and self.xiaoqu_flag == True:
-                if Bn == True:
-                    Bn_outcome = B_necessity_check(self.B,self.zhuhu,self.zhuzhai,self.xiaoqu,self.Bn_check_result)
-                    Bnfilename = 'B_necessity_result.xlsx'
-                    Bn_outcome.to_excel('./B_necessity_result.xlsx',encoding="utf-8",index=False,sheet_name='Sheet')
-                    self.addToList(Bnfilename,Bn_outcome)
-                    self.showData(Bn_outcome,100)
-                if Bs == True:
-                    Bs_outcome = B_suggestion_check(self.B, self.zhuhu, self.zhuzhai, self.xiaoqu,self.Bs_check_result)
-                    Bsfilename = 'B_suggestion_result.xlsx'
-                    Bs_outcome.to_excel('./B_suggestion_result.xlsx', encoding="utf-8", index=False,sheet_name='Sheet')
-                    self.addToList(Bsfilename, Bs_outcome)
-                    self.showData(Bs_outcome, 100)
-            else:
-                if self.B_flag == False:
-                    self.statusbar.showMessage("请先导入B表")
-                if self.zhuhu_flag == False:
-                    self.statusbar.showMessage("请先导入住户表")
-                if self.zhuzhai_flag == False:
-                    self.statusbar.showMessage("请先导入住宅表")
-                if self.xiaoqu_flag == False:
-                    self.statusbar.showMessage("请先导入小区表")
+                    else:
+                        if self.A_flag == False:
+                            self.statusbar.showMessage("请先导入A表")
+                        if self.xiaoqu_flag == False:
+                            self.statusbar.showMessage("请先导入小区表")
+                        if self.zhuhu_flag == False and An == True:
+                            self.statusbar.showMessage("请先导入住户表")
 
-        if Bi == True:
-            if self.B_flag == True and self.xiaoqu_flag == True:
-                Bi_outcome = B_independent_check(self.B,self.xiaoqu,self.Bi_check_result)
-                Bi_filename = 'B_independent_result.xlsx'
-                Bi_outcome.to_excel('./B_independent_result.xlsx', encoding="utf-8", index=False,sheet_name='Sheet')
-                self.addToList(Bi_filename, Bi_outcome)
-                self.showData(Bi_outcome, 100)
-            else:
-                if self.B_flag == False:
-                    self.statusbar.showMessage("请先导入B表")
-                if self.xiaoqu_flag == False:
-                    self.statusbar.showMessage("请先导入小区表")
+                if Bn == True or Bs == True:
+                    if self.B_flag == True and self.zhuhu_flag == True and self.zhuzhai_flag == True and self.xiaoqu_flag == True:
+                        if Bn == True:
+                            self.statusbar.showMessage("正在进行问卷B必要性审核，请稍等...")
+                            Bn_outcome = B_necessity_check(self.B,self.zhuhu,self.zhuzhai,self.xiaoqu,self.Bn_check_result)
+                            Bnfilename = '问卷B必要性审核结果.xlsx'
+                            Bn_outcome.to_excel('./问卷B必要性审核结果.xlsx',encoding="utf-8",index=False,sheet_name='Sheet')
+                            self.addToList(Bnfilename,Bn_outcome)
+                            self.showData(Bn_outcome,100)
+                            self.statusbar.showMessage("审核完毕")
+                        if Bs == True:
+                            self.statusbar.showMessage("正在进行问卷B提示性审核，请稍等...")
+                            Bs_outcome = B_suggestion_check(self.B, self.zhuhu, self.zhuzhai, self.xiaoqu,self.Bs_check_result)
+                            Bsfilename = '问卷B提示性审核结果.xlsx'
+                            Bs_outcome.to_excel('./问卷B提示性审核结果.xlsx', encoding="utf-8", index=False,sheet_name='Sheet')
+                            self.addToList(Bsfilename, Bs_outcome)
+                            self.showData(Bs_outcome, 100)
+                            self.statusbar.showMessage("审核完毕")
+                    else:
+                        if self.B_flag == False:
+                            self.statusbar.showMessage("请先导入B表")
+                        if self.zhuhu_flag == False:
+                            self.statusbar.showMessage("请先导入住户表")
+                        if self.zhuzhai_flag == False:
+                            self.statusbar.showMessage("请先导入住宅表")
+                        if self.xiaoqu_flag == False:
+                            self.statusbar.showMessage("请先导入小区表")
+
+                if Bi == True:
+                    if self.B_flag == True and self.xiaoqu_flag == True:
+                        self.statusbar.showMessage("正在进行问卷B独立审核，请稍等...")
+                        Bi_outcome = B_independent_check(self.B,self.xiaoqu,self.Bi_check_result)
+                        Bi_filename = '问卷B独立审核结果.xlsx'
+                        Bi_outcome.to_excel('./问卷B独立审核结果.xlsx', encoding="utf-8", index=False,sheet_name='Sheet')
+                        self.addToList(Bi_filename, Bi_outcome)
+                        self.showData(Bi_outcome, 100)
+                        self.statusbar.showMessage("审核完毕")
+                    else:
+                        if self.B_flag == False:
+                            self.statusbar.showMessage("请先导入B表")
+                        if self.xiaoqu_flag == False:
+                            self.statusbar.showMessage("请先导入小区表")
+
+        except Exception as e:
+            mylogger.logger.error(e)
+            self.statusbar.showMessage("审核问卷出错，请检查使用数据是否正确")
 
         # print(An,As,Bn,Bs,range)
         # print("result:",result)
@@ -377,9 +398,9 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
         if res_path["账页表"] != "":
             self.zy, self.zy_flag = self.openFileByPath(res_path["账页表"])
             info += "账页表,"
-        if res_path["编码手册"] != "":
-            self.codes, self.codes_flag = self.openFileByPath(res_path["编码手册"])
-            info += "编码手册,"
+        # if res_path["编码手册"] != "":
+        #     self.codes, self.codes_flag = self.openFileByPath(res_path["编码手册"])
+        #     info += "编码手册,"
         info += "成功"
         if info == "打开成功":
             self.statusbar.showMessage("未选择打开新文件")
@@ -388,72 +409,93 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
 
     # 打开审核账页对话框
     def openzyCheckDialog(self):
-        from zyCheckDialog import zyCheckDialog
-        from zy_check_necessity import zy_check_necessity
-        from zy_check_suggestion import zy_check_suggestion
-        from zy_check_addition import zy_check_addition
-        from independent_check import independent_check
-        zcd = zyCheckDialog(self)
-        result = zcd.exec_()
-        Zn,Zs,Za,Zi,townRange,monthRange,directory = zcd.getData()
-        if Zs == True or Zn == True or Za == True:
-            if self.zy_flag == True and self.A_flag == True and self.B_flag == True and self.zhuhu_flag == True and \
-               self.zhuzhai_flag == True and self.xiaoqu_flag == True:
-                if Zs == True:
-                    Zs_outcome = zy_check_suggestion(self.A,self.B,self.zy,self.zhuzhai,self.zhuhu,self.xiaoqu,self.zs_check_result)
-                    Zs_filename = 'zy_suggestion_result.xlsx'
-                    Zs_outcome.to_excel(directory+'/'+Zs_filename, encoding="utf-8", index=False,sheet_name='Sheet')
-                    self.addToList(Zs_filename, Zs_outcome)
-                    self.showData(Zs_outcome, 100)
-                if Zn == True:
-                    Zn_outcome = zy_check_necessity(self.A,self.B,self.zy,self.zhuzhai,self.zhuhu,self.xiaoqu,self.zn_check_result)
-                    Zn_filename = 'zy_necessity_result.xlsx'
-                    Zn_outcome.to_excel(directory+'/'+Zn_filename, encoding="utf-8", index=False,sheet_name='Sheet')
-                    self.addToList(Zn_filename, Zn_outcome)
-                    self.showData(Zn_outcome, 100)
-                if Za == True:
-                    za_outcome = zy_check_addition(self.A, self.B, self.zy, self.zhuzhai, self.zhuhu, self.xiaoqu,self.za_check_result)
-                    za_filename = 'zy_addition_result.xlsx'
-                    za_outcome.to_excel(directory + '/' + za_filename, encoding="utf-8", index=False, sheet_name='Sheet')
-                    self.addToList(za_filename, za_outcome)
-                    self.showData(za_outcome, 100)
+        try:
+            from zyCheckDialog import zyCheckDialog
+            zcd = zyCheckDialog(self)
+            result = zcd.exec_()
+            # print(result)
+            if result:
+                from zy_check_necessity import zy_check_necessity
+                from zy_check_suggestion import zy_check_suggestion
+                from zy_check_addition import zy_check_addition
+                from independent_check import independent_check
+                Zn,Zs,Za,Zi,townRange,monthRange,directory = zcd.getData()
+                if Zs == True or Zn == True or Za == True or Zi == True:
+                    if self.zy_flag == True and self.A_flag == True and self.B_flag == True and self.zhuhu_flag == True and self.xiaoqu_flag == True:
+                        # 账页逻辑关系独立审核
+                        if Zi == True:
+                            self.statusbar.showMessage("正在进行账页逻辑关系独立审核，请稍等...")
+                            zi_outcome = independent_check(self.A, self.B, self.zy, self.zhuhu, self.xiaoqu,self.zi_check_result)
+                            zi_filename = '账页逻辑关系独立审核.xlsx'
+                            zi_outcome.to_excel(directory + '/' + zi_filename, encoding="utf-8", index=False,sheet_name='Sheet')
+                            self.addToList(zi_filename, zi_outcome)
+                            self.showData(zi_outcome, 100)
+                            self.statusbar.showMessage("审核完毕")
 
-            else:
-                if self.zy_flag == False:
-                    self.statusbar.showMessage("请先导入账页表")
-                if self.A_flag == False:
-                    self.statusbar.showMessage("请先导入A表")
-                if self.B_flag == False:
-                    self.statusbar.showMessage("请先导入B表")
-                if self.zhuhu_flag == False:
-                    self.statusbar.showMessage("请先导入住户表")
-                if self.zhuzhai_flag == False:
-                    self.statusbar.showMessage("请先导入住宅表")
-                if self.xiaoqu_flag == False:
-                    self.statusbar.showMessage("请先导入小区表")
+                        # 账页逻辑关系提示性审核
+                        if Zs == True:
+                            if self.zhuzhai_flag == True:
+                                self.statusbar.showMessage("正在进行账页关系逻辑提示性审核，请稍等...")
+                                Zs_outcome = zy_check_suggestion(self.A, self.B, self.zy, self.zhuzhai, self.zhuhu,
+                                                                 self.xiaoqu, self.zs_check_result)
+                                Zs_filename = '账页逻辑提示性审核.xlsx'
+                                Zs_outcome.to_excel(directory + '/' + Zs_filename, encoding="utf-8", index=False,
+                                                    sheet_name='Sheet')
+                                self.addToList(Zs_filename, Zs_outcome)
+                                self.showData(Zs_outcome)
+                                self.statusbar.showMessage("审核完毕")
+                            else:
+                                if self.zhuzhai_flag == False:
+                                    self.statusbar.showMessage("请先导入住宅表")
 
-        if Zi == True:
-            if self.zy_flag == True and self.A_flag == True and self.B_flag == True and self.zhuhu_flag == True and \
-                    self.xiaoqu_flag == True and self.codes_flag == True:
-                zi_outcome = independent_check(self.A, self.B, self.zy,self.zhuhu, self.xiaoqu,self.codes,self.zi_check_result)
-                zi_filename = 'zy_addition_result.xlsx'
-                zi_outcome.to_excel(directory + '/' + zi_filename, encoding="utf-8", index=False, sheet_name='Sheet')
-                self.addToList(zi_filename, zi_outcome)
-                self.showData(zi_outcome, 100)
-            else:
-                if self.zy_flag == False:
-                    self.statusbar.showMessage("请先导入账页表")
-                if self.A_flag == False:
-                    self.statusbar.showMessage("请先导入A表")
-                if self.B_flag == False:
-                    self.statusbar.showMessage("请先导入B表")
-                if self.zhuhu_flag == False:
-                    self.statusbar.showMessage("请先导入住户表")
-                if self.codes_flag == False:
-                    self.statusbar.showMessage("请先编码手册")
-                if self.xiaoqu_flag == False:
-                    self.statusbar.showMessage("请先导入小区表")
+                        # 账页逻辑关系必要性审核
+                        if Zn == True:
+                            if self.zhuzhai_flag == True:
+                                self.statusbar.showMessage("正在进行账页逻辑关系必要性审核，请稍等...")
+                                Zn_outcome = zy_check_necessity(self.A, self.B, self.zy, self.zhuzhai, self.zhuhu, self.xiaoqu,
+                                                                self.zn_check_result)
+                                Zn_filename = '账页逻辑必要性审核.xlsx'
+                                Zn_outcome.to_excel(directory + '/' + Zn_filename, encoding="utf-8", index=False,
+                                                    sheet_name='Sheet')
+                                self.addToList(Zn_filename, Zn_outcome)
+                                self.showData(Zn_outcome, 100)
+                                self.statusbar.showMessage("审核完毕")
+                            else:
+                                if self.zhuzhai_flag == False:
+                                    self.statusbar.showMessage("请先导入住宅表")
 
+                        # 账页逻辑关系附加性审核
+                        if Za == True:
+                            if self.zhuzhai_flag == True:
+                                self.statusbar.showMessage("正在进行账页逻辑关系附加性审核，请稍等...")
+                                za_outcome = zy_check_addition(self.A, self.B, self.zy, self.zhuzhai, self.zhuhu, self.xiaoqu,
+                                                               self.za_check_result)
+                                za_filename = '账页逻辑附加性审核结果.xlsx'
+                                za_outcome.to_excel(directory + '/' + za_filename, encoding="utf-8", index=False,
+                                                    sheet_name='Sheet')
+                                self.addToList(za_filename, za_outcome)
+                                self.showData(za_outcome, 100)
+                                self.statusbar.showMessage("审核完毕")
+                            else:
+                                if self.zhuzhai_flag == False:
+                                    self.statusbar.showMessage("请先导入住宅表")
+
+                    else:
+                        if self.zy_flag == False:
+                            self.statusbar.showMessage("请先导入账页表")
+                        if self.A_flag == False:
+                            self.statusbar.showMessage("请先导入A表")
+                        if self.B_flag == False:
+                            self.statusbar.showMessage("请先导入B表")
+                        if self.zhuhu_flag == False:
+                            self.statusbar.showMessage("请先导入住户表")
+                        if self.zhuzhai_flag == False:
+                            self.statusbar.showMessage("请先导入住宅表")
+                        if self.xiaoqu_flag == False:
+                            self.statusbar.showMessage("请先导入小区表")
+        except Exception as e:
+            mylogger.logger.error(e)
+            self.statusbar.showMessage("审核账页逻辑关系出错，请检查使用数据是否正确")
 
     def openFileByPath(self,filePath):
         try:
@@ -525,8 +567,6 @@ class MyMainWindow(QMainWindow,Ui_MainWindow):
             mylogger.logger.debug("get_community_range 未选择小区表")
         else:
             xiaoqu_arr = list(self.xiaoqu['VNAME'].drop_duplicates())
-
-
 
 
     # 导入小区名录时触发

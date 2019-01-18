@@ -102,3 +102,4 @@ class Ui_questionCheck(object):
         self.partRadioButton.setText(_translate("questionCheck", "选择"))
         self.label.setText(_translate("questionCheck", "至"))
 
+

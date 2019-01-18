@@ -27,10 +27,10 @@ class zyCheckDialog(QDialog,Ui_zyCheckDialog):
         # 小区范围
         self.allTownRadioButton.toggled.connect(self.setTownDisabled)
         self.partTownRadioButton.toggled.connect(self.setTownEnabled)
-        # 审核月份
+        # 选择审核月份
         self.allMonthRadioButton.toggled.connect(self.setMonthDisabled)
         self.partMonthRadioButton.toggled.connect(self.setMonthEnabled)
-        # 浏览路径
+        # 选择路径
         self.selectPathButton.clicked.connect(self.selectFileSavePath)
 
     def setTownDisabled(self):
@@ -61,7 +61,6 @@ class zyCheckDialog(QDialog,Ui_zyCheckDialog):
         townRange = 0
         monthRange = 0
         directory = self.dirlineEdit.text()
-
         if self.partTownRadioButton.isChecked() == True:
             townLowValue = self.townLowSpinBox.value()
             townUpperValue = self.townUpperSpinBox.value()

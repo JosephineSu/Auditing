@@ -21,7 +21,7 @@ def spliteFamily(table):
         yield hu_data
 
 def fill4(x):
-    return x.zfill(4)
+    return str(x).zfill(4)
 
 def add_column(zy,codes):
     #在账页表中添加列Sidr,Sidrm,Note4，NNote11，Note22，Note33,Note44
@@ -33,21 +33,21 @@ def add_column(zy,codes):
     codes = codes.drop(0)
     # zy = zy.drop(0)
     # print(codes['CODE'])
-    x = codes[['CODE', 'note4', 'markyc']]
+    x = codes[['CODE', 'NOTE4', 'MARKYC']]
     df = pd.merge(zy, x, how='left', on=['CODE'])
-    df["note4"] = df["note4"].apply(fill4)
-    # print(type(df['note4']))
-    zy.insert(14,'note4',df['note4'])
-    zy.insert(15,'note11',df['note4'].apply(lambda x: x[0]))
-    zy.insert(16,'note22',df['note4'].apply(lambda x: x[1]))
-    zy.insert(17, 'note33', df['note4'].apply(lambda x: x[2]))
-    zy.insert(18, 'note44', df['note4'].apply(lambda x: x[3]))
-    # zy["note11"] = zy["note11"].apply(lambda x: x[0])
-    # zy["note22"] = zy["note22"].apply(lambda x: x[1])
-    # zy["note33"] = zy["note33"].apply(lambda x: x[2])
-    # zy["note44"] = zy["note44"].apply(lambda x: x[3])
+    df["NOTE4"] = df["NOTE4"].apply(fill4)
+    # print(type(df['NOTE4']))
+    zy.insert(14,'NOTE4',df['NOTE4'])
+    zy.insert(15,'NOTE11',df['NOTE4'].apply(lambda x: x[0]))
+    zy.insert(16,'NOTE22',df['NOTE4'].apply(lambda x: x[1]))
+    zy.insert(17, 'NOTE33', df['NOTE4'].apply(lambda x: x[2]))
+    zy.insert(18, 'NOTE44', df['NOTE4'].apply(lambda x: x[3]))
+    # zy["NOTE11"] = zy["NOTE11"].apply(lambda x: x[0])
+    # zy["NOTE22"] = zy["NOTE22"].apply(lambda x: x[1])
+    # zy["NOTE33"] = zy["NOTE33"].apply(lambda x: x[2])
+    # zy["NOTE44"] = zy["NOTE44"].apply(lambda x: x[3])
 
-    zy.insert(19,'markyc',df['markyc'])
+    zy.insert(19,'MARKYC',df['MARKYC'])
     # print(zy)
     return zy
 
@@ -103,11 +103,17 @@ def sum_people(family):
     return len(family.index)
 
 
-def independent_check(tableA,tableB,zy,zhuhu,xiaoqu,codes,result_table):
+# 独立审核涉及A表、B表、账页表、住户表、小区表
+def independent_check(tableA,tableB,zy,zhuhu,xiaoqu,result_table):
     mylogger.logger.debug("zy_independent_check init...")
     global zy_independent_result
     zy_independent_result.drop(zy_independent_result.index,inplace=False)
     zy_independent_result = result_table
+
+    # 导入编码手册
+    codes_path = "./编码手册.csv"
+    codes = read_csv(codes_path)
+
     zy = zy.drop(0)
     # zhuzhai = zhuzhai.drop(0)
     zhuhu = zhuhu.drop(0)
@@ -115,10 +121,9 @@ def independent_check(tableA,tableB,zy,zhuhu,xiaoqu,codes,result_table):
     zy = add_column(zy,codes)
     zy["PERSON"] = zy["PERSON"].apply(Decimal)
     zy["NOTE"] = zy["NOTE"].apply(Decimal)
-    # zy["CODE"] = zy["CODE"].apply(str)
-    # zy["CODE"] = zy["CODE"].apply(lambda x: x.strip())
+    zy["CODE"] = zy["CODE"].apply(str)
+    zy["CODE"] = zy["CODE"].apply(lambda x: x.strip())
     zy_families = spliteFamily(zy)
-
     xiaoqu["VID"] = xiaoqu["VID"].apply(str)
     xiaoqu["VID"] = xiaoqu["VID"].apply(lambda x: x.strip())
 
@@ -140,7 +145,7 @@ def independent_check(tableA,tableB,zy,zhuhu,xiaoqu,codes,result_table):
         scode = zy_family['SCODE'].values[0]
         year = str(zy_family['YEAR'].values[0])
         month = str(zy_family['MONTH'].values[0])
-        dict = {'year':year, 'task':task, 'month': month, 'coun':coun,'scode':scode, 'sid':family_sid,'person':str(99), 'townname':townname, 'vname':vname}
+        dict = {'year':year, 'task':task, 'month': month, 'coun':coun,'scode':scode, 'sid':family_sid,'person':str(99),'核实说明':None,'townname':townname, 'vname':vname}
 
         huzhu = ""
         # zycheck about tableA and zy
@@ -414,54 +419,54 @@ def independent_check(tableA,tableB,zy,zhuhu,xiaoqu,codes,result_table):
                                 dict['核实内容'] = "单笔2万元以上的大额数据，请核实并注明情况！"
                                 insert_to_pd(dict)
 
-                if person_row['note4'] == 0 and (pd.isnull(person_row['CODE']) == True or c == 0):
-                    dict['code'] = "code={},note4={}".format(c, person_row['note4'])
+                if person_row['NOTE4'] == 0 and (pd.isnull(person_row['CODE']) == True or c == 0):
+                    dict['code'] = "code={},NOTE4={}".format(c, person_row['NOTE4'])
                     dict['核实内容'] = "此条账页的编码（code）,不在标准编码库中，漏填？编码错？导入导出错？请核实！"
                     insert_to_pd(dict)
 
-                if person_row['markyc'] == 2:
-                    dict['code'] = "code={},markyc={}".format(c, person_row['markyc'])
+                if person_row['MARKYC'] == 2:
+                    dict['code'] = "code={},MARKYC={}".format(c, person_row['MARKYC'])
                     dict['核实内容'] = "此条账页的编码（code）为异常编码（这些编码上海应不存在），确有？编码错？导入导出错？请核实！"
                     insert_to_pd(dict)
 
                 if c != 641111 and c != 651111:
-                    if person_row['note11'] == 1 and person_row['AMOUNT'] == 0:
-                        dict['code'] = "code={},note11={},amount={}".format(c, person_row['note11'],
+                    if person_row['NOTE11'] == 1 and person_row['AMOUNT'] == 0:
+                        dict['code'] = "code={},NOTE11={},amount={}".format(c, person_row['NOTE11'],
                                                                             person_row['AMOUNT'])
                         dict['核实内容'] = "此条账页应有数据，却漏填数据。请核实！"
                         insert_to_pd(dict)
-                    if person_row['note22'] == 1 and person_row['MONEY'] == 0:
-                        dict['code'] = "code={},note22={},money={}".format(c, person_row['note22'], person_row['MONEY'])
+                    if person_row['NOTE22'] == 1 and person_row['MONEY'] == 0:
+                        dict['code'] = "code={},NOTE22={},money={}".format(c, person_row['NOTE22'], person_row['MONEY'])
                         dict['核实内容'] = "此条账页应填金额，却漏填金额。请核实！"
                         insert_to_pd(dict)
 
-                if person_row['note11'] == 0 and person_row['AMOUNT'] != 0:
-                    dict['code'] = "code={},note11={},amount={}".format(c, person_row['note11'], person_row['AMOUNT'])
+                if person_row['NOTE11'] == 0 and person_row['AMOUNT'] != 0:
+                    dict['code'] = "code={},NOTE11={},amount={}".format(c, person_row['NOTE11'], person_row['AMOUNT'])
                     dict['核实内容'] = "此条账页不应填数据，却填了数据。请核实！"
                     insert_to_pd(dict)
 
-                if person_row['note22'] == 0 and person_row['MONEY'] != 0:
-                    dict['code'] = "code={},note22={},money={}".format(c, person_row['note22'], person_row['MONEY'])
+                if person_row['NOTE22'] == 0 and person_row['MONEY'] != 0:
+                    dict['code'] = "code={},NOTE22={},money={}".format(c, person_row['NOTE22'], person_row['MONEY'])
                     dict['核实内容'] = "此条账页不应填金额，却填了金额。请核实！"
                     insert_to_pd(dict)
 
-                if person_row['note33'] == 1 and person_row['note4'] == 1:
-                    dict['code'] = "code={},note33={},note4={}".format(c, person_row['note33'], person_row['note4'])
-                    dict['核实内容'] = "此条账页应填note4，但是漏填note4内容。请核实！"
+                if person_row['NOTE33'] == 1 and person_row['NOTE4'] == 1:
+                    dict['code'] = "code={},NOTE33={},NOTE4={}".format(c, person_row['NOTE33'], person_row['NOTE4'])
+                    dict['核实内容'] = "此条账页应填NOTE4，但是漏填NOTE4内容。请核实！"
                     insert_to_pd(dict)
 
-                if person_row['note33'] == 0 and person_row['note4'] != 1:
-                    dict['code'] = "code={},note33={},note4={}".format(c, person_row['note33'], person_row['note4'])
-                    dict['核实内容'] = "此条账页不应填note4，却填了note4内容。请核实！"
+                if person_row['NOTE33'] == 0 and person_row['NOTE4'] != 1:
+                    dict['code'] = "code={},NOTE33={},NOTE4={}".format(c, person_row['NOTE33'], person_row['NOTE4'])
+                    dict['核实内容'] = "此条账页不应填NOTE4，却填了NOTE4内容。请核实！"
                     insert_to_pd(dict)
 
                 p = int(person_row['PERSON'])
-                if p < 1 or p > 20 and person_row['note44'] == 1:
-                    dict['code'] = "code={},person={},note44={}".format(c, p, person_row['note44'])
+                if p < 1 or p > 20 and person_row['NOTE44'] == 1:
+                    dict['code'] = "code={},person={},NOTE44={}".format(c, p, person_row['NOTE44'])
                     dict['核实内容'] = "此条账页应填人代码却漏填或填错。请核实！"
                     insert_to_pd(dict)
 
-                # if c != 0 and person_row['note44'] == 0 and p != 99:
+                # if c != 0 and person_row['NOTE44'] == 0 and p != 99:
                 #     t = code_match(person_row, "3") + code_match(person_row, "52") + code_match(person_row, "54") + code_match(person_row,"55") + \
                 #         code_match(person_row, "56") + code_match(person_row, "534111") + code_match(person_row, "539") + code_match(person_row, "23") \
                 #         + code_match(person_row, "2402") + code_match(person_row, "2403") + code_match(person_row,"2404") + code_match(person_row,"240711") + \
@@ -765,12 +770,7 @@ def independent_check(tableA,tableB,zy,zhuhu,xiaoqu,codes,result_table):
 
     return zy_independent_result
 
-# # 打开csv文件 返回DataFrame对象
-# def read_csv(path):
-#     with open(path, 'r') as f:
-#         file = pd.read_csv(f, header=0)
-#     return file
-# 打开csv文件 返回DataFrame对象
+
 def read_csv(path):
     with open(path, 'r') as f:
         df = pd.read_csv(f, header=0, low_memory=False)
@@ -783,8 +783,8 @@ def read_csv(path):
 def colUpper(col):
     dict = {}
     for key in col:
-        #跳过编码表中的录入控制码
-        if key == "note4" or key == "markyc":continue
+        # #跳过编码表中的录入控制码
+        # if key == "NOTE4" or key == "MARKYC":continue
         value = key.upper()
         # print(value)
         dict[key] = value
@@ -797,9 +797,8 @@ if __name__ == '__main__':
     zy_path = u"D:/研一/项目/Auditing/输入文件夹/06账页310151.1806.csv"
     zhuhu_path = u"D:/研一/审核程序/src/输入文件夹/住户样本310151.18.csv"
     xiaoqu_path = u"D:/研一/审核程序/src/输入文件夹/小区名录310151.18.csv"
-    codes_path = "D:\研一\项目\CheckProgram\Auditing\输入文件夹\编码手册.csv"
-    # fp2 = open(codes_path)
-    codes = read_csv(codes_path)
+    # codes_path = "D:\研一\项目\CheckProgram\Auditing\输入文件夹\编码手册.csv"
+    # codes = read_csv(codes_path)
 
     TableA = read_csv(A_path)
     TableB = read_csv(B_path)
@@ -808,8 +807,8 @@ if __name__ == '__main__':
     zhuhu = read_csv(zhuhu_path)
 
     head = {'year': [], 'task': [], 'month': [], 'coun':[],'scode': [], 'sid': [], 'person': [], 'name': [], 'code': [],
-            '核实内容': [], 'townname': [], 'vname': []}
+            '核实内容': [],'核实说明':[], 'townname': [], 'vname': []}
     result = pd.DataFrame(head)
-    result = result[['year', 'month', 'task','coun', 'scode', 'sid', 'person', 'name', 'code', '核实内容', 'townname', 'vname']]  # , 'haddr']]
-    independent_check(TableA,TableB,zy,zhuhu,xiaoqu,codes,result)
+    result = result[['year', 'month', 'task','coun', 'scode', 'sid', 'person', 'name', 'code', '核实内容','核实说明', 'townname', 'vname']]  # , 'haddr']]
+    independent_check(TableA,TableB,zy,zhuhu,xiaoqu,result)
     zy_independent_result.to_excel('./independent_result.xlsx',encoding="utf-8",index=False,sheet_name='Sheet')

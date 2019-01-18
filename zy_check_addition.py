@@ -95,6 +95,7 @@ def zy_check_addition(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
         qu = xiaoqu[xiaoqu['VID'] == qu_vid]
         townname = qu['TOWNNAME'].values[0]
         vname = qu['VNAME'].values[0]
+        coun = qu['COUN'].values[0]
         ChangeH = 0
         LenM = 0
         surveyType = Table(one_zhuhu, "SURVEYTYPE")
@@ -108,7 +109,7 @@ def zy_check_addition(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
         Month = min(list(set(Year_arr["MONTH"])))
         openYear = Table(one_zhuhu,'OPENYEAR')
         dict = {'year': str(Table(zy_family, 'YEAR')), 'month': str(Table(zy_family, 'MONTH')), 'task': str(task),
-                'scode': scode, 'sid': family_sid, 'person': str(99),'townname': townname, 'vname': vname}
+                'coun':str(coun),'scode': scode, 'sid': family_sid, 'person': str(99),'核实说明':None,'townname': townname, 'vname': vname}
 
         if pd.isnull(openYear) == False:
             # openYear = int(one_zhuhu["OPENYEAR"].values[0])
@@ -216,7 +217,7 @@ def zy_check_addition(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
 
 
     end = datetime.datetime.now()
-    print("运行时间：",end - begin)
+    # print("运行时间：",end - begin)
     return zy_addition_result
 
 
@@ -258,9 +259,9 @@ if __name__ == '__main__':
     zhuhu = read_csv(zhuhu_path)
     xiaoqu = read_csv(xiaoqu_path)
 
-    head = {'year': [], 'task': [], 'month': [], 'scode': [], 'sid': [], 'person': [], 'name': [], 'code': [],
-            '核实内容': [], 'townname': [], 'vname': []}
+    head = {'year': [], 'task': [], 'month': [], 'scode': [],'coun':[], 'sid': [], 'person': [], 'name': [], 'code': [],
+            '核实内容': [],'核实说明':[], 'townname': [], 'vname': []}
     result = pd.DataFrame(head)
-    result = result[['sid', 'year', 'month', 'task', 'scode','person', 'name', 'code', '核实内容', 'townname', 'vname']]
+    result = result[['sid', 'year', 'month', 'task','coun', 'scode','person', 'name', 'code', '核实内容','核实说明','townname', 'vname']]
     zy_check_addition(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result)
     zy_addition_result.to_excel('zy_addition_result.xlsx', encoding="utf-8", index=False, sheet_name='Sheet')

@@ -30,6 +30,7 @@ class QuestionCheckDialog(QDialog,Ui_questionCheck):
     def setDisable(self):
         self.lowSpinBox.setEnabled(False)
         self.upperSpinBox.setEnabled(False)
+
     def setEnable(self):
         self.lowSpinBox.setEnabled(True)
         self.upperSpinBox.setEnabled(True)
@@ -41,8 +42,8 @@ class QuestionCheckDialog(QDialog,Ui_questionCheck):
         Bs = self.B_suggestion.isChecked()
         Bi = self.B_independent.isChecked()
 
-        if self.partRadioButton.isChecked() == True:
 
+        if self.partRadioButton.isChecked() == True:
             lower = self.lowSpinBox.value()
             upper = self.upperSpinBox.value()
             print(lower,upper)

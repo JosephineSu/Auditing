@@ -237,6 +237,7 @@ def zy_check_necessity(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
         qu = xiaoqu[xiaoqu['VID'] == qu_vid]
         townname = qu['TOWNNAME'].values[0]
         vname = qu['VNAME'].values[0]
+        coun = qu['COUN'].values[0]
         # qu = xiaoqu[xiaoqu['vID'] == qu_vid]
         # townname = qu['townName'].values[0]
         # vname = qu['vName'].values[0]
@@ -257,7 +258,7 @@ def zy_check_necessity(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result):
         Month = min(list(set(Year_arr["MONTH"])))
 
         dict = {'year': str(Table(zy_family, 'YEAR')), 'month': str(Table(zy_family, 'MONTH')), 'task': str(TaskCode),\
-                'scode': scode, 'sid': family_sid,'person':str(99),'townname':townname,'vname':vname}
+                'scode': scode, 'coun':str(coun), 'sid': family_sid,'person':str(99),'townname':townname,'vname':vname,'核实说明':None}
 
         hu_zhu = ''
         openYear = Table(one_zhuhu,"OPENYEAR")
@@ -542,10 +543,10 @@ if __name__ == '__main__':
     zy = read_csv(zy_path)
     zhuzhai = read_csv(zhuzhai_path)
     zhuhu = read_csv(zhuhu_path)
-    head = {'sid': [], 'year': [], 'task': [], 'month': [], 'scode': [], 'person': [], 'name': [], 'code': [],
-            '核实内容': [], 'townname': [], 'vname': []}
+    head = {'sid': [],'coun':[],'scode': [], 'year': [],'task': [], 'month': [],  'person': [], 'name': [], 'code': [],
+            '核实内容': [],'核实说明':[], 'townname': [], 'vname': []}
     result = pd.DataFrame(head)
-    result = result[['sid', 'year', 'month', 'task', 'scode', 'person', 'name', 'code', '核实内容', 'townname', 'vname']]  # , 'haddr']]
+    result = result[['sid', 'year', 'month', 'task','coun', 'scode', 'person', 'name', 'code', '核实内容','核实说明','townname', 'vname']]  # , 'haddr']]
 
     zy_check_necessity(TableA,TableB,zy,zhuzhai,zhuhu,xiaoqu,result)
     zy_necessity_result.to_excel('zy_necessity_result.xlsx',encoding="utf-8",index=False,sheet_name='Sheet')
